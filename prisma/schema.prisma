@@ -12,17 +12,52 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  LOCKED
+  DEACTIVATED
+  DELETED
+}
+
 model User {
-  id            String   @id @default(ulid())
-  email         String   @unique
-  passwordHash  String   @map("password_hash")
-  firstName     String   @map("first_name")
-  lastName      String   @map("last_name")
-  status        String
-  emailVerified String   @map("email_verified")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  lastSeenAt    DateTime @map("last_seen")
+  id            String     @id @default(ulid())
+  email         String     @unique
+  passwordHash  String     @map("password_hash")
+  firstName     String     @map("first_name")
+  lastName      String     @map("last_name")
+  status        UserStatus @default(PENDING)
+  emailVerified Boolean    @default(false) @map("email_verified")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  lastSeenAt    DateTime?   @map("last_seen")
 
   @@map("user")
+}
+
+model Organization {
+  id        String   @id @default(ulid())
+  name      String   @unique
+  taxNo     String?  @unique @map("tax_number")
+  address   String?
+  createdAt DateTime @default(now())
+  roles     Role[]
+
+  @@map("organization")
+}
+
+enum RoleNames {
+  ADMIN
+  MANAGER
+  DIRECTOR
+  EMPLOYEE
+  VIEWER
+}
+
+model Role {
+  id             String       @id @default(ulid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           RoleNames    @default(VIEWER)
 }
