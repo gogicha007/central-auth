@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "central_auth",
+      "Group": "visit_lab",
+      "Host": "central-auth-central-auth.l.aivencloud.com",
+      "Port": 14720,
+      "MaintenanceDB": "defaultdb",
+      "Username": "avnadmin",
+      "SSLMode": "require"
+    }
+  }
+}
