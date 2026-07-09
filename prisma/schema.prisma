@@ -13,41 +13,68 @@ datasource db {
 }
 
 enum UserStatus {
-  PENDING
-  ACTIVE
-  SUSPENDED
-  LOCKED
-  DEACTIVATED
-  DELETED
+  PENDING // user signed up but an email is not verified yet
+  ACTIVE // active account
+  SUSPENDED // temporarily disabled by an administrator
+  LOCKED // automatically locked after too many failed login
+  DEACTIVATED // user voluntarily deactivated his account. can be reactivated
+  DELETED // ineccessible, retained for audit purposes
 }
 
 model User {
-  id            String     @id @default(ulid())
-  email         String     @unique
-  passwordHash  String     @map("password_hash")
-  firstName     String     @map("first_name")
-  lastName      String     @map("last_name")
-  status        UserStatus @default(PENDING)
-  emailVerified Boolean    @default(false) @map("email_verified")
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
-  lastSeenAt    DateTime?   @map("last_seen")
+  id                  String               @id @default(ulid())
+  email               String               @unique
+  passwordHash        String               @map("password_hash")
+  firstName           String               @map("first_name")
+  lastName            String               @map("last_name")
+  status              UserStatus           @default(PENDING)
+  emailVerified       Boolean              @default(false) @map("email_verified")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  lastSeenAt          DateTime?            @map("last_seen")
+  organizationMembers OrganizationMember[]
+  sessions            Session[]
 
   @@map("user")
 }
 
 model Organization {
-  id        String   @id @default(ulid())
-  name      String   @unique
-  taxNo     String?  @unique @map("tax_number")
-  address   String?
-  createdAt DateTime @default(now())
-  roles     Role[]
+  id                  String               @id @default(ulid())
+  name                String               @unique
+  slug                String               @unique // slug name of the company
+  taxNo               String?              @unique @map("tax_number")
+  address             String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  roles               Role[]
+  organizationMembers OrganizationMember[]
+  invitations         Invitation[]
 
   @@map("organization")
 }
 
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id])
+  roleId         String       @map("role_id")
+  role           Role         @relation(fields: [roleId], references: [id])
+  status         MemberStatus // user can belong to multiple organizations, and their status can differ in each other
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+
+  @@map("organization_member")
+}
+
 enum RoleNames {
+  SUPERADMIN
   ADMIN
   MANAGER
   DIRECTOR
@@ -56,8 +83,58 @@ enum RoleNames {
 }
 
 model Role {
-  id             String       @id @default(ulid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name           RoleNames    @default(VIEWER)
+  id                  String               @id @default(ulid())
+  organizationId      String               @map("organization_id")
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name                RoleNames            @default(VIEWER)
+  description         String
+  isSystem            Boolean              @default(false) @map("is_system") // if true the deletion of this record must be impossible, for security reasons
+  organizationMembers OrganizationMember[]
+  rolePermissions     RolePermission[]
+  invitations         Invitation[]
+
+  @@map("role")
+}
+
+model Permission {
+  id              String           @id @default(ulid())
+  resource        String // authorization subject like users, invoices, business subjects like resource/svyion -> purchase:po(purchase order) + create, approve or cancel
+  action          String // create, view, delete, update, approve, cancel etc
+  rolePermissions RolePermission[]
+
+  @@map("permission")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permission")
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String
+  roleId         String       @map("role_id")
+  role           Role         @relation(fields: [roleId], references: [id])
+  token          String
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime     @map("accepted_at")
+  createdBy      String       @map("created_by")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  ip           String // ip from where the session opened
+  userAgent    String   @map("user_agent") // browser/mobile/
+  lastActivity DateTime @map("last_activity")
+  expiresAt    DateTime @map("expires_at")
+  revokedAt    DateTime @map("revoked_at")
 }
