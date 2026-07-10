@@ -34,6 +34,8 @@ model User {
   lastSeenAt          DateTime?            @map("last_seen")
   organizationMembers OrganizationMember[]
   sessions            Session[]
+  auditLogs           AuditLog[]
+  createdInvitations  Invitation[]         @relation("InvitationCreatedBy")
 
   @@map("user")
 }
@@ -48,6 +50,7 @@ model Organization {
   roles               Role[]
   organizationMembers OrganizationMember[]
   invitations         Invitation[]
+  auditLogs           AuditLog[]
 
   @@map("organization")
 }
@@ -70,6 +73,7 @@ model OrganizationMember {
   status         MemberStatus // user can belong to multiple organizations, and their status can differ in each other
   joinedAt       DateTime     @default(now()) @map("joined_at")
 
+  @@unique([organizationId, userId])
   @@map("organization_member")
 }
 
@@ -122,19 +126,106 @@ model Invitation {
   email          String
   roleId         String       @map("role_id")
   role           Role         @relation(fields: [roleId], references: [id])
-  token          String
+  token          String       @unique
   expiresAt      DateTime     @map("expires_at")
-  acceptedAt     DateTime     @map("accepted_at")
-  createdBy      String       @map("created_by")
+  acceptedAt     DateTime?    @map("accepted_at")
+  createdByUserId String?      @map("created_by")
+  createdByUser   User?        @relation("InvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@map("invitation")
 }
 
 model Session {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
-  user         User     @relation(fields: [userId], references: [id])
-  ip           String // ip from where the session opened
-  userAgent    String   @map("user_agent") // browser/mobile/
-  lastActivity DateTime @map("last_activity")
-  expiresAt    DateTime @map("expires_at")
-  revokedAt    DateTime @map("revoked_at")
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id])
+  ip             String? // ip from where the session opened
+  userAgent      String?   @map("user_agent") // browser/mobile/
+  lastActivity   DateTime  @map("last_activity")
+  expiresAt      DateTime  @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  revokedReason  String?   @map("revoked_reason")
+  refreshVersion Int       @default(0) @map("refresh_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@map("session")
+}
+
+enum ResourceType {
+  USER
+  ORGANIZATION
+  ROLE
+  PERMISSION
+  INVITATION
+  SESSION
+  API_KEY
+}
+
+enum AuditAction {
+  // Authentication
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
+  REFRESH_TOKEN
+  SESSION_REVOKED
+  PASSWORD_CHANGED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFIED
+
+  // User
+  USER_CREATED
+  USER_UPDATED
+  USER_DEACTIVATED
+  USER_REACTIVATED
+  USER_DELETED
+
+  // Organization
+  ORGANIZATION_CREATED
+  ORGANIZATION_UPDATED
+  ORGANIZATION_DELETED
+  ORGANIZATION_TRANSFERRED
+
+  // Membership
+  MEMBER_INVITED
+  MEMBER_JOINED
+  MEMBER_REMOVED
+
+  // Roles
+  ROLE_CREATED
+  ROLE_UPDATED
+  ROLE_DELETED
+  ROLE_ASSIGNED
+  ROLE_REMOVED
+
+  // Permissions
+  PERMISSION_GRANTED
+  PERMISSION_REVOKED
+
+  // Security
+  MFA_ENABLED
+  MFA_DISABLED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  userId         String?       @map("user_id")
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action         AuditAction
+  resource       ResourceType
+  resourceId     String?       @map("resource_id")
+  metadata       Json?
+  ip             String?
+  userAgent      String?       @map("user_agent")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([resource, resourceId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_log")
 }
