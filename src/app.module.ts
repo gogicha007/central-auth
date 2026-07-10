@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -8,14 +8,14 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { LoggingModule } from 'libs/services/logging.module';
+import { LoggerMiddleware } from 'libs/middleware/logger.middleware';
 
 @Module({
   imports: [
-    DatabaseModule,
-    RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [authConfig]
+      load: [authConfig],
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -23,12 +23,19 @@ import { AuthModule } from './auth/auth.module';
         {
           ttl: config.get<number>('THROTTLER_TTL') || 60000, // in seconds
           limit: config.get<number>('THROTTLER_LIMIT') || 10,
-        }
-      ]
+        },
+      ],
     }),
+    DatabaseModule,
+    RedisModule,
+    LoggingModule,
     AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
