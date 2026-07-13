@@ -9,27 +9,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginResponseDto = exports.LoginDto = void 0;
+exports.CreateUserDto = void 0;
 const class_validator_1 = require("class-validator");
 const user_validators_1 = require("../../../libs/validators/user.validators");
-class LoginDto {
+class CreateUserDto {
     email;
-    password;
+    firstName;
+    lastName;
+    passwordHash;
 }
-exports.LoginDto = LoginDto;
+exports.CreateUserDto = CreateUserDto;
 __decorate([
     (0, class_validator_1.IsEmail)({}, user_validators_1.UserValidators.EMAIL_RULES),
     __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
+], CreateUserDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(user_validators_1.UserValidators.NAME_RULES),
-    (0, class_validator_1.MinLength)(8, user_validators_1.UserValidators.PASSWORD_RULES),
     __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
-class LoginResponseDto {
-    accessToken;
-    expiresIn;
-    tokenType;
-}
-exports.LoginResponseDto = LoginResponseDto;
-//# sourceMappingURL=login.dto.js.map
+], CreateUserDto.prototype, "firstName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(user_validators_1.UserValidators.NAME_RULES),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "lastName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(user_validators_1.UserValidators.NAME_RULES),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "passwordHash", void 0);
+//# sourceMappingURL=create-user.dto.js.map

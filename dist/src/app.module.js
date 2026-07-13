@@ -22,6 +22,7 @@ const config_2 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
 const logging_module_1 = require("../libs/services/logging.module");
 const logger_middleware_1 = require("../libs/middleware/logger.middleware");
+const users_module_1 = require("./users/users.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(logger_middleware_1.LoggerMiddleware).forRoutes('*');
@@ -48,6 +49,7 @@ exports.AppModule = AppModule = __decorate([
             redis_module_1.RedisModule,
             logging_module_1.LoggingModule,
             auth_module_1.AuthModule,
+            users_module_1.UsersModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

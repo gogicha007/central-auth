@@ -2,7 +2,7 @@
 
 This is an IAM platform with multi-tenant support.
 
-Users sign-up, create an organization, invite teammates, assign roles, manage permissions, and track sensitive actions through audit logs.
+Users sign-up, create an organization, invite users, assign roles, manage permissions, and track sensitive actions through audit logs.
 
 Auth pattern - Session-bound JWT:
     
@@ -25,10 +25,14 @@ Auth pattern - Session-bound JWT:
 
 ## Authentication
 
-Flow :
+Sign-up:
+
+    1. User enters email, password, first&last names
+    2. System creates User with status=PENDING and emailVeriried=false
+    3. System sends verification link to user's email
+    4. User clicks the link, account becomes ACTIVE and emailVerified = true
 
 Login -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
-
 
 
 ## Authorization

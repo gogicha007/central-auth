@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Patch } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
-import { SignUpDto } from "./dto/sitnUp.dto";
+import { SignUpDto } from "./dto/signUp.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -16,7 +16,7 @@ export class AuthController {
     //TODO: POST login
     @Post('login')
     login(@Body() loginDto: LoginDto) {
-        return 'login'
+        return this.authService.login(loginDto)
     }
 
     //TODO: POST refresh token
@@ -28,7 +28,7 @@ export class AuthController {
     //TODO: POST logout
     @Post('logout')
     logout() {
-        return 'logout'
+        return this.authService.logout()
     }
     //TODO: POST sessions/:id/revoke
     @Post('sessions/:id/revoke')

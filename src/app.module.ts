@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { LoggingModule } from '../libs/services/logging.module';
 import { LoggerMiddleware } from '../libs/middleware/logger.middleware';
+import { UsersModule } from './users/users.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { LoggerMiddleware } from '../libs/middleware/logger.middleware';
     RedisModule,
     LoggingModule,
     AuthModule,
+    UsersModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,27 +9,36 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginResponseDto = exports.LoginDto = void 0;
+exports.SignUpResonseDto = exports.SignUpDto = void 0;
 const class_validator_1 = require("class-validator");
-const user_validators_1 = require("../../../libs/validators/user.validators");
-class LoginDto {
+class SignUpDto {
     email;
     password;
+    firstName;
+    lastName;
 }
-exports.LoginDto = LoginDto;
+exports.SignUpDto = SignUpDto;
 __decorate([
-    (0, class_validator_1.IsEmail)({}, user_validators_1.UserValidators.EMAIL_RULES),
+    (0, class_validator_1.IsEmail)({}, { message: 'invalid email' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
+], SignUpDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(user_validators_1.UserValidators.NAME_RULES),
-    (0, class_validator_1.MinLength)(8, user_validators_1.UserValidators.PASSWORD_RULES),
+    (0, class_validator_1.MinLength)(8, { message: 'min length of password 8 charachters' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
-class LoginResponseDto {
-    accessToken;
-    expiresIn;
-    tokenType;
+], SignUpDto.prototype, "password", void 0);
+__decorate([
+    (0, class_validator_1.IsString)({ message: 'first name must be string' }),
+    __metadata("design:type", String)
+], SignUpDto.prototype, "firstName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)({ message: 'first name must be string' }),
+    __metadata("design:type", String)
+], SignUpDto.prototype, "lastName", void 0);
+class SignUpResonseDto {
+    email;
+    firstName;
+    lastName;
+    status;
 }
-exports.LoginResponseDto = LoginResponseDto;
-//# sourceMappingURL=login.dto.js.map
+exports.SignUpResonseDto = SignUpResonseDto;
+//# sourceMappingURL=signUp.dto.js.map

@@ -5,22 +5,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthService = void 0;
+exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
-let AuthService = class AuthService {
-    signUp(payload) {
-        return `signup payload ${JSON.stringify(payload)}`;
-    }
-    login(payload) {
-        return `login payload ${JSON.stringify(payload)}`;
-    }
-    logout() {
-        return `logout hit`;
+const users_service_1 = require("./users.service");
+let UsersController = class UsersController {
+    usersService;
+    constructor(usersService) {
+        this.usersService = usersService;
     }
 };
-exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
-    (0, common_1.Injectable)()
-], AuthService);
-//# sourceMappingURL=auth.service.js.map
+exports.UsersController = UsersController;
+exports.UsersController = UsersController = __decorate([
+    (0, common_1.Controller)('users'),
+    __metadata("design:paramtypes", [users_service_1.UsersService])
+], UsersController);
+//# sourceMappingURL=users.controller.js.map

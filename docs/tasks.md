@@ -12,6 +12,14 @@
 
 ## Auth module
 
+    [ ] Sign-up
+    [ ] Login
+    [ ] Logout
+    [ ] Refresh
+    [ ] Create organization
+    [ ] Membership
+    [ ] Invite
+    [ ]
     [ ] Auth guard
     [ ] roles
         [ ] public(@Public decorator)
@@ -21,3 +29,9 @@
     [ ] logging service
     [ ] middleware(logging service)
     [ ] exception filters
+
+## User module
+
+    [ ] create user
+        [ ] send email link
+    [ ] update user

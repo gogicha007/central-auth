@@ -1,11 +1,12 @@
 import { IsEmail, IsString, MinLength } from 'class-validator'
+import { UserValidators } from '../../../libs/validators/user.validators'
 
 export class LoginDto {
-    @IsEmail()
+    @IsEmail({}, UserValidators.EMAIL_RULES)
     email!: string
 
-    @IsString()
-    @MinLength(8)
+    @IsString(UserValidators.NAME_RULES)
+    @MinLength(8, UserValidators.PASSWORD_RULES)
     password!: string
 }
 
