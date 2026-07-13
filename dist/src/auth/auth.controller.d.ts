@@ -14,4 +14,5 @@ export declare class AuthController {
     orgInvitacions(): string;
     invitacionAccept(): string;
     membershipRoles(): string;
+    health(): string;
 }

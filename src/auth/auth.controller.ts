@@ -66,9 +66,8 @@ export class AuthController {
         return 'membership roles'
     }
 
-
     @Get()
-    health(){
+    health() {
         return 'get outh requested'
     }
 
