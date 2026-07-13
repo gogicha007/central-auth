@@ -12,7 +12,7 @@ export class MailService {
 
     async sendVerificationEmail(email: string, token: string) {
         const baseUrl = this.configService.get<string>('APP_URL')
-        const verificationLink = `${baseUrl}/auth/verify0email?token=${token}`
+        const verificationLink = `${baseUrl}/auth/verify-email?token=${token}`
 
         await this.mailQueue.add('send-verification-email', {
             to: email,

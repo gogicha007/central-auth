@@ -13,6 +13,7 @@
 ## Auth module
 
     [ ] Sign-up
+        [ ] hash the password
     [ ] Login
     [ ] Logout
     [ ] Refresh
@@ -34,9 +35,13 @@
 
     [ ] create user
         [x] create user record
-        [ ] send email link
+
+        [x] send email link
     [ ] update user
 
 ## Mail module
+
     [ ] mail service
     [ ] mail processor
+
+
