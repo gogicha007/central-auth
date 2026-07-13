@@ -33,5 +33,10 @@
 ## User module
 
     [ ] create user
+        [x] create user record
         [ ] send email link
     [ ] update user
+
+## Mail module
+    [ ] mail service
+    [ ] mail processor
