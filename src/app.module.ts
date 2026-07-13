@@ -8,8 +8,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { LoggingModule } from 'libs/services/logging.module';
-import { LoggerMiddleware } from 'libs/middleware/logger.middleware';
+import { LoggingModule } from '../libs/services/logging.module';
+import { LoggerMiddleware } from '../libs/middleware/logger.middleware';
 
 @Module({
   imports: [

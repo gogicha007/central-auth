@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { LoggingService } from 'libs/services/logging.service';
+import { LoggingService } from '../services/logging.service';
 
 interface TypedRequestBody<T> extends Request {
   body: T;

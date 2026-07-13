@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
-import { LoggingService } from 'libs/services/logging.service';
+import { LoggingService } from '../libs/services/logging.service';
 
 async function bootstrap() {
   const logger = new Logger('CentralAuth');

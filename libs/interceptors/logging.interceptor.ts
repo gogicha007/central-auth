@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { Observable } from 'rxjs';
-import { LoggingService } from 'libs/services/logging.service';
+import { LoggingService } from '../services/logging.service';
 
 type MulterRequest = Request & {
   file?: { originalname?: string; mimetype?: string; size?: number };

@@ -4,7 +4,10 @@ This is an IAM platform with multi-tenant support.
 
 Users sign-up, create an organization, invite teammates, assign roles, manage permissions, and track sensitive actions through audit logs.
 
-Auth is jwt + session based.
+Auth pattern - Session-bound JWT:
+    
+    - JWT for stateless token transport
+    - Session state in Redis for revocation, rotation and control.
 
 ## Technology stack
 
@@ -25,6 +28,8 @@ Auth is jwt + session based.
 Flow :
 
 Login -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
+
+
 
 ## Authorization
 
