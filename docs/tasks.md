@@ -35,8 +35,8 @@
 
     [ ] create user
         [x] create user record
-
         [x] send email link
+        [ ] verify email
     [ ] update user
 
 ## Mail module
