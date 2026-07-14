@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { TokenType, UserStatus } from '@prisma/client';
@@ -75,19 +75,7 @@ export class UsersService {
 
         await this.mailService.sendVerificationEmail(email, verificationToken)
 
-        return { messate: 'User created. Please check your email to verify your account' }
-    }
-
-    async verifyEmail(id: string) {
-        await this.dbService.user.update({
-            where: { id },
-            data: {
-                status: UserStatus.ACTIVE,
-                emailVerified: true
-            }
-        })
-
-        return { message: 'Email verified successfully. You can now log in.' }
+        return { message: 'User created. Please check your email to verify your account' }
     }
 
     async verifyEmailByToken(receivedToken: string) {
@@ -97,14 +85,44 @@ export class UsersService {
 
         const userToken = await this.dbService.userToken.findUnique({
             where: {
-                tokenHash: receivedTokenHash
+                tokenHash: receivedTokenHash,
+                type: TokenType.EMAIL_VERIFICATION
             },
             select: {
-                userId: true
+                userId: true,
+                expiresAt: true,
+                usedAt: true
             }
         })
 
-        if (userToken) console.log("uset token found, userId", userToken.userId)
-        console.log('verifyEmailByToken', receivedTokenHash)
+        if (!userToken) throw new BadRequestException('Token not found')
+
+        if (userToken.expiresAt < new Date()) throw new BadRequestException('Token expired')
+
+        if (userToken.usedAt) throw new BadRequestException('Token already used')
+
+        try {
+            await this.dbService.$transaction(async (tx) => {
+                await tx.user.update({
+                    where: { id: userToken.userId },
+                    data: {
+                        status: UserStatus.ACTIVE,
+                        emailVerified: true,
+                        emailVerifiedAt: new Date()
+                    }
+                })
+
+                await tx.userToken.update({
+                    where: { tokenHash: receivedTokenHash },
+                    data: {
+                        usedAt: new Date(Date.now())
+                    }
+                })
+            })
+        } catch (error) {
+            throw new Error()
+        }
+
+        return { message: 'Email verified successfully. You can now log in.' }
     }
 }
