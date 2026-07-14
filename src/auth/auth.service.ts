@@ -20,6 +20,10 @@ export class AuthService {
         return `login payload ${JSON.stringify(payload)}`
     }
 
+    verifyEmail(token: string) {
+        return this.userService.verifyEmailByToken(token)
+    }
+
     logout() {
         return `logout hit`
     }
