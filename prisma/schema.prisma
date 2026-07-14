@@ -37,6 +37,7 @@ model User {
   sessions            Session[]
   auditLogs           AuditLog[]
   createdInvitations  Invitation[]         @relation("InvitationCreatedBy")
+  userToken           UserToken[]
 
   @@map("user")
 }
@@ -208,6 +209,26 @@ enum AuditAction {
   MFA_DISABLED
   ACCOUNT_LOCKED
   ACCOUNT_UNLOCKED
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+  INVITATION
+}
+
+model UserToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  type      TokenType
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("user_token")
 }
 
 model AuditLog {
