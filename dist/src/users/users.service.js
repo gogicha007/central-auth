@@ -71,24 +71,6 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException(`User with email: ${payload.email} already exists`);
         const { email, firstName, lastName, passwordHash } = payload;
         const verificationToken = crypto.randomBytes(32).toString('hex');
-        user = await this.dbService.user.create({
-            data: {
-                email,
-                passwordHash,
-                firstName,
-                lastName,
-                status: client_1.UserStatus.PENDING,
-                emailVerified: false
-            },
-            select: {
-                email: true,
-                firstName: true,
-                lastName: true,
-                status: true,
-                emailVerified: true,
-                id: true
-            }
-        });
         await this.mailService.sendVerificationEmail(email, verificationToken);
         return { messate: 'User created. Please check your email to verify your account' };
     }

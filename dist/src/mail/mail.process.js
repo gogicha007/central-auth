@@ -47,22 +47,28 @@ exports.MailProcessor = void 0;
 const bullmq_1 = require("@nestjs/bullmq");
 const common_1 = require("@nestjs/common");
 const nodemailer = __importStar(require("nodemailer"));
+const config_1 = require("@nestjs/config");
 let MailProcessor = MailProcessor_1 = class MailProcessor extends bullmq_1.WorkerHost {
+    configService;
     logger = new common_1.Logger(MailProcessor_1.name);
     transporter;
-    constructor() {
+    constructor(configService) {
         super();
+        this.configService = configService;
         this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_host,
-            port: parseInt(process.env.SMTP_PORT || '587'),
+            host: this.configService.get('SMTP_HOST'),
+            port: parseInt(this.configService.get('SMTP_PORT') || '587'),
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+                user: this.configService.get('SMTP_USER'),
+                pass: this.configService.get('SMTP_PASS')
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
     }
     async process(job) {
-        if (job.name === 'send-verification') {
+        if (job.name === 'send-verification-email') {
             const { to, link } = job.data;
             this.logger.log(`Processing verification email to ${to}`);
             try {
@@ -85,6 +91,6 @@ exports.MailProcessor = MailProcessor;
 exports.MailProcessor = MailProcessor = MailProcessor_1 = __decorate([
     (0, bullmq_1.Processor)('mail-queue'),
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [config_1.ConfigService])
 ], MailProcessor);
 //# sourceMappingURL=mail.process.js.map

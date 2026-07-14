@@ -31,24 +31,24 @@ export class UsersService {
 
         const verificationToken = crypto.randomBytes(32).toString('hex')
 
-        user = await this.dbService.user.create({
-            data: {
-                email,
-                passwordHash,
-                firstName,
-                lastName,
-                status: UserStatus.PENDING,
-                emailVerified: false
-            },
-            select: {
-                email: true,
-                firstName: true,
-                lastName: true,
-                status: true,
-                emailVerified: true,
-                id: true
-            }
-        })
+        // user = await this.dbService.user.create({
+        //     data: {
+        //         email,
+        //         passwordHash,
+        //         firstName,
+        //         lastName,
+        //         status: UserStatus.PENDING,
+        //         emailVerified: false
+        //     },
+        //     select: {
+        //         email: true,
+        //         firstName: true,
+        //         lastName: true,
+        //         status: true,
+        //         emailVerified: true,
+        //         id: true
+        //     }
+        // })
 
         await this.mailService.sendVerificationEmail(email, verificationToken)
 

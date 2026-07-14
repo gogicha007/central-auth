@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import *  as nodemailer from 'nodemailer'
+import { ConfigService } from '@nestjs/config';
 
 
 @Processor('mail-queue')
@@ -10,20 +11,23 @@ export class MailProcessor extends WorkerHost {
     private readonly logger = new Logger(MailProcessor.name)
     private transporter: nodemailer.Transporter
 
-    constructor() {
+    constructor(private configService: ConfigService) {
         super()
         this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_host,
-            port: parseInt(process.env.SMTP_PORT || '587'),
+            host: this.configService.get('SMTP_HOST'),
+            port: parseInt(this.configService.get('SMTP_PORT') || '587'),
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+                user: this.configService.get('SMTP_USER'),
+                pass: this.configService.get('SMTP_PASS')
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         })
     }
 
     async process(job: Job<{ to: string; link: string }>): Promise<any> {
-        if (job.name === 'send-verification') {
+        if (job.name === 'send-verification-email') {
             const { to, link } = job.data
 
             this.logger.log(`Processing verification email to ${to}`)

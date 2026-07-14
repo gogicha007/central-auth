@@ -4,3 +4,5 @@ node_modules
 # Env variables
 .env
 /generated/prisma
+
+/dist
