@@ -41,72 +41,50 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var MailProcessor_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersService = void 0;
+exports.MailProcessor = void 0;
+const bullmq_1 = require("@nestjs/bullmq");
 const common_1 = require("@nestjs/common");
-const database_service_1 = require("../database/database.service");
-const client_1 = require("@prisma/client");
-const mail_service_1 = require("../mail/mail.service");
-const crypto = __importStar(require("crypto"));
-let UsersService = class UsersService {
-    dbService;
-    mailService;
-    constructor(dbService, mailService) {
-        this.dbService = dbService;
-        this.mailService = mailService;
+const nodemailer = __importStar(require("nodemailer"));
+let MailProcessor = MailProcessor_1 = class MailProcessor extends bullmq_1.WorkerHost {
+    logger = new common_1.Logger(MailProcessor_1.name);
+    transporter;
+    constructor() {
+        super();
+        this.transporter = nodemailer.createTransport({
+            host: process.env.SMTP_host,
+            port: parseInt(process.env.SMTP_PORT || '587'),
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            }
+        });
     }
-    async create(payload) {
-        let user = await this.dbService.user.findUnique({
-            where: { email: payload.email },
-            select: {
-                email: true,
-                firstName: true,
-                lastName: true,
-                status: true,
-                emailVerified: true,
-                id: true
+    async process(job) {
+        if (job.name === 'send-verification') {
+            const { to, link } = job.data;
+            this.logger.log(`Processing verification email to ${to}`);
+            try {
+                await this.transporter.sendMail({
+                    from: `"Central Auth" <no-reply@centralapp.com`,
+                    to,
+                    subject: 'Verify Your email Address',
+                    html: `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`,
+                });
+                this.logger.log(`Email successfully sent to ${to}`);
             }
-        });
-        if (user)
-            throw new common_1.ConflictException(`User with email: ${payload.email} already exists`);
-        const { email, firstName, lastName, passwordHash } = payload;
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-        user = await this.dbService.user.create({
-            data: {
-                email,
-                passwordHash,
-                firstName,
-                lastName,
-                status: client_1.UserStatus.PENDING,
-                emailVerified: false
-            },
-            select: {
-                email: true,
-                firstName: true,
-                lastName: true,
-                status: true,
-                emailVerified: true,
-                id: true
+            catch (error) {
+                this.logger.error(`Failed to send email to ${to}`, error.stack);
+                throw error;
             }
-        });
-        await this.mailService.sendVerificationEmail(email, verificationToken);
-        return { messate: 'User created. Please check your email to verify your account' };
-    }
-    async verifyEmail(id) {
-        await this.dbService.user.update({
-            where: { id },
-            data: {
-                status: client_1.UserStatus.ACTIVE,
-                emailVerified: true
-            }
-        });
-        return { message: 'Email verified successfully. You can now log in.' };
+        }
     }
 };
-exports.UsersService = UsersService;
-exports.UsersService = UsersService = __decorate([
+exports.MailProcessor = MailProcessor;
+exports.MailProcessor = MailProcessor = MailProcessor_1 = __decorate([
+    (0, bullmq_1.Processor)('mail-queue'),
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [database_service_1.DatabaseService,
-        mail_service_1.MailService])
-], UsersService);
-//# sourceMappingURL=users.service.js.map
+    __metadata("design:paramtypes", [])
+], MailProcessor);
+//# sourceMappingURL=mail.process.js.map

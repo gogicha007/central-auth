@@ -12,8 +12,9 @@
 
 ## Auth module
 
-    [ ] Sign-up
-        [ ] hash the password
+    [x] Sign-up
+        [x] hash the password
+        [x] call to create user(usersService.create())
     [ ] Login
     [ ] Logout
     [ ] Refresh
@@ -45,3 +46,5 @@
     [ ] mail processor
 
 
+## Commone
+    [x] password module/service

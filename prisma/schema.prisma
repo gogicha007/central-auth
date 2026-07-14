@@ -28,9 +28,11 @@ model User {
   lastName            String               @map("last_name")
   status              UserStatus           @default(PENDING)
   emailVerified       Boolean              @default(false) @map("email_verified")
+  emailVerifiedAt     DateTime?
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
-  lastSeenAt          DateTime?            @map("last_seen")
+  lastLoginAt         DateTime?            @map("last_seen")
+  failedLoginCount    Int                  @default(0)
   organizationMembers OrganizationMember[]
   sessions            Session[]
   auditLogs           AuditLog[]
@@ -119,15 +121,15 @@ model RolePermission {
 }
 
 model Invitation {
-  id             String       @id @default(uuid())
-  organizationId String       @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  email          String
-  roleId         String       @map("role_id")
-  role           Role         @relation(fields: [roleId], references: [id])
-  token          String       @unique
-  expiresAt      DateTime     @map("expires_at")
-  acceptedAt     DateTime?    @map("accepted_at")
+  id              String       @id @default(uuid())
+  organizationId  String       @map("organization_id")
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  email           String
+  roleId          String       @map("role_id")
+  role            Role         @relation(fields: [roleId], references: [id])
+  token           String       @unique
+  expiresAt       DateTime     @map("expires_at")
+  acceptedAt      DateTime?    @map("accepted_at")
   createdByUserId String?      @map("created_by")
   createdByUser   User?        @relation("InvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
 

@@ -1,18 +1,26 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { SignUpDto } from "./dto/signUp.dto";
 import { LoginDto } from "./dto/login.dto";
+import { UsersService } from "../users/users.service";
+import { PasswordService } from "../common/password/password.service";
 
 @Injectable()
 export class AuthService {
-    signUp(payload: SignUpDto){
-        return `signup payload ${JSON.stringify(payload)}`
+    constructor(
+        private readonly userService: UsersService,
+        private readonly passwordService: PasswordService
+    ) { }
+    async signUp(payload: SignUpDto) {
+        const hashedPassword = await this.passwordService.hash(payload.password)
+        const { password, ...credentials } = { ...payload, passwordHash: hashedPassword }
+        return this.userService.create(credentials)
     }
 
-    login(payload: LoginDto){
+    login(payload: LoginDto) {
         return `login payload ${JSON.stringify(payload)}`
     }
 
-    logout(){
+    logout() {
         return `logout hit`
     }
 

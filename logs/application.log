@@ -14,4 +14,8 @@
 ][2026-07-13T08:46:03.853Z] [INFO Response: 201 - Body: "signup payload [object Object]"
 ][2026-07-13T08:47:29.845Z] [INFO Incoming Request: POST /auth/signup - Query: {} - Body: {"email":"john@doe.com","password":"password","firstName":"John","lastName":"Doe"}
 ][2026-07-13T08:47:29.848Z] [INFO Response: 201 - Body: "signup payload {\"email\":\"john@doe.com\",\"password\":\"password\",\"firstName\":\"John\",\"lastName\":\"Doe\"}"
+][2026-07-14T07:14:03.216Z] [INFO Incoming Request: POST /auth/signup - Query: {} - Body: {"email":"john@doe.com","password":"password","firstName":"John","lastName":"Doe"}
+][2026-07-14T07:14:03.229Z] [INFO Response: 201 - Body: "signup payload {\"email\":\"john@doe.com\",\"password\":\"password\",\"firstName\":\"John\",\"lastName\":\"Doe\"}"
+][2026-07-14T07:42:57.463Z] [INFO Incoming Request: POST /auth/signup - Query: {} - Body: {"email":"john@doe.com","password":"password","firstName":"John","lastName":"Doe"}
+][2026-07-14T07:42:57.663Z] [INFO Response: 201 - Body: "signup payload {\"email\":\"john@doe.com\",\"password\":\"password\",\"firstName\":\"John\",\"lastName\":\"Doe\"}"
 ]

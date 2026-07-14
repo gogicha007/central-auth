@@ -12,12 +12,19 @@ import { LoggingModule } from '../libs/services/logging.module';
 import { LoggerMiddleware } from '../libs/middleware/logger.middleware';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [authConfig],
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379
+      }
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],

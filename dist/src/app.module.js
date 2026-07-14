@@ -23,6 +23,8 @@ const auth_module_1 = require("./auth/auth.module");
 const logging_module_1 = require("../libs/services/logging.module");
 const logger_middleware_1 = require("../libs/middleware/logger.middleware");
 const users_module_1 = require("./users/users.module");
+const mail_module_1 = require("./mail/mail.module");
+const bullmq_1 = require("@nestjs/bullmq");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(logger_middleware_1.LoggerMiddleware).forRoutes('*');
@@ -35,6 +37,12 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 load: [auth_config_1.default],
+            }),
+            bullmq_1.BullModule.forRoot({
+                connection: {
+                    host: 'localhost',
+                    port: 6379
+                }
             }),
             throttler_1.ThrottlerModule.forRootAsync({
                 inject: [config_2.ConfigService],
@@ -50,6 +58,7 @@ exports.AppModule = AppModule = __decorate([
             logging_module_1.LoggingModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
+            mail_module_1.MailModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
