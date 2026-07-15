@@ -33,8 +33,8 @@ Sign-up:
         - creates UserToken record for email_verification.
         - adds task to BullMq queue, with job.name: "send-verification-email"
         - MailProcessor(declared as a background worker) detects the task with specific job.name in queue and runs the code that sends an email
-        - User clicks the link -> auth.controller/@Get('verify-email') catches .
     4. User clicks the link, account becomes ACTIVE and emailVerified = true
+        - User clicks the link -> auth.controller/@Get('verify-email') catches 
 
 Login -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
 

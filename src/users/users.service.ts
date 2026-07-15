@@ -5,6 +5,7 @@ import { TokenType, UserStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import * as crypto from 'crypto'
 import { handlePrismaError } from '../common/filters/error.util';
+import { ok } from '../common/utils/api-response.util';
 
 @Injectable()
 export class UsersService {
@@ -16,14 +17,7 @@ export class UsersService {
     async create(payload: CreateUserDto) {
         let user = await this.dbService.user.findUnique({
             where: { email: payload.email },
-            select: {
-                email: true,
-                firstName: true,
-                lastName: true,
-                status: true,
-                emailVerified: true,
-                id: true
-            }
+            select: { id: true }
         })
 
         if (user) throw new ConflictException(`User with email: ${payload.email} already exists`)
@@ -76,7 +70,7 @@ export class UsersService {
 
             await this.mailService.sendVerificationEmail(email, verificationToken)
 
-            return { message: 'User created. Please check your email to verify your account' }
+            return ok('User created. Please check your email to verify your account')
         } catch (error) {
             handlePrismaError(error)
         }
@@ -132,7 +126,7 @@ export class UsersService {
                 })
 
             })
-            return { message: 'Email verified successfully. You can now log in.' }
+            return ok('Email verified successfully. You can now log in.')
         } catch (error) {
             handlePrismaError(error)
         }

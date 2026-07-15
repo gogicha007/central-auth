@@ -21,7 +21,6 @@
     [ ] Create organization
     [ ] Membership
     [ ] Invite
-    [ ]
     [ ] Auth guard
     [ ] roles
         [ ] public(@Public decorator)
@@ -34,17 +33,19 @@
 
 ## User module
 
-    [ ] create user
+    [x] create user
         [x] create user record
         [x] send email link
-        [ ] verify email
+        [x] verify email
     [ ] update user
 
 ## Mail module
 
-    [ ] mail service
-    [ ] mail processor
+    [x] mail service
+    [x] mail processor
 
+## Common
 
-## Commone
     [x] password module/service
+    [x] logger middleware
+    [x] exception filters
