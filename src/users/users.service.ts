@@ -15,19 +15,20 @@ export class UsersService {
     ) { }
 
     async create(payload: CreateUserDto) {
-        let user = await this.dbService.user.findUnique({
+        let existingUser = await this.dbService.user.findUnique({
             where: { email: payload.email },
             select: { id: true }
         })
 
-        if (user) throw new ConflictException(`User with email: ${payload.email} already exists`)
+        if (existingUser) throw new ConflictException(`User with email: ${payload.email} already exists`)
 
         try {
             const { email, firstName, lastName, passwordHash } = payload
             const verificationToken = crypto.randomBytes(32).toString('hex')
-            await this.dbService.$transaction(async (tx) => {
+
+            const createdUser = await this.dbService.$transaction(async (tx) => {
                 // create user
-                user = await tx.user.create({
+                const newUser = await tx.user.create({
                     data: {
                         email,
                         passwordHash,
@@ -37,12 +38,12 @@ export class UsersService {
                         emailVerified: false
                     },
                     select: {
+                        id: true,
                         email: true,
                         firstName: true,
                         lastName: true,
                         status: true,
                         emailVerified: true,
-                        id: true
                     }
                 })
                 // send verification email
@@ -52,7 +53,7 @@ export class UsersService {
                     .digest("hex")
 
                 const userToken = {
-                    userId: user.id,
+                    userId: newUser.id,
                     type: TokenType.EMAIL_VERIFICATION,
                     tokenHash,
                     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -66,11 +67,12 @@ export class UsersService {
                         expiresAt: userToken.expiresAt
                     }
                 })
+                return newUser
             })
 
             await this.mailService.sendVerificationEmail(email, verificationToken)
 
-            return ok('User created. Please check your email to verify your account')
+            return ok('User created. Please check your email to verify your account', createdUser)
         } catch (error) {
             handlePrismaError(error)
         }
