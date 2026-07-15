@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { TokenType, UserStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import * as crypto from 'crypto'
+import { handlePrismaError } from '../common/filters/error.util';
 
 @Injectable()
 export class UsersService {
@@ -79,30 +80,47 @@ export class UsersService {
     }
 
     async verifyEmailByToken(receivedToken: string) {
-        const receivedTokenHash = crypto.createHash('sha256')
+
+        if (!receivedToken) throw new BadRequestException('Token not found')
+
+        const now = new Date()
+
+        const tokenHash = crypto.createHash('sha256')
             .update(receivedToken)
             .digest('hex')
 
-        const userToken = await this.dbService.userToken.findUnique({
-            where: {
-                tokenHash: receivedTokenHash,
-                type: TokenType.EMAIL_VERIFICATION
-            },
-            select: {
-                userId: true,
-                expiresAt: true,
-                usedAt: true
-            }
-        })
-
-        if (!userToken) throw new BadRequestException('Token not found')
-
-        if (userToken.expiresAt < new Date()) throw new BadRequestException('Token expired')
-
-        if (userToken.usedAt) throw new BadRequestException('Token already used')
 
         try {
             await this.dbService.$transaction(async (tx) => {
+                const userToken = await tx.userToken.findUnique({
+                    where: {
+                        tokenHash,
+                        type: TokenType.EMAIL_VERIFICATION
+                    },
+
+                    select: {
+                        userId: true,
+                        expiresAt: true,
+                        usedAt: true
+                    }
+                })
+
+                if (!userToken) throw new BadRequestException('Token not found')
+
+                const updateCount = await tx.userToken.updateMany({
+                    where: {
+                        tokenHash,
+                        usedAt: null,
+                        expiresAt: { gte: now },
+                        type: TokenType.EMAIL_VERIFICATION
+                    },
+                    data: {
+                        usedAt: new Date(Date.now())
+                    }
+                })
+
+                if (updateCount.count === 0) throw new BadRequestException('Invalid or used token')
+
                 await tx.user.update({
                     where: { id: userToken.userId },
                     data: {
@@ -112,17 +130,11 @@ export class UsersService {
                     }
                 })
 
-                await tx.userToken.update({
-                    where: { tokenHash: receivedTokenHash },
-                    data: {
-                        usedAt: new Date(Date.now())
-                    }
-                })
             })
+            return { meFssage: 'Email verified successfully. You can now log in.' }
         } catch (error) {
-            throw new Error()
+            handlePrismaError(error)
         }
 
-        return { message: 'Email verified successfully. You can now log in.' }
     }
 }

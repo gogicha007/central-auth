@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
-import { LoggingService } from '../libs/services/logging.service';
+import { Logger } from '@nestjs/common';
+import { LoggingService } from './common/logging/logging.service';
+import { applyToHttpLayer } from './common/setup';
 
 async function bootstrap() {
   const logger = new Logger('CentralAuth');
@@ -11,14 +12,14 @@ async function bootstrap() {
   const loggingService = app.get(LoggingService);
 
   app.enableShutdownHooks();
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  applyToHttpLayer(app, loggingService);
 
   const PORT = Number(process.env.PORT ?? 3000);
   process.on('uncaughtException', (error) => {
     loggingService.error('Uncaught Exception', error.stack);
   });
 
-  process.on('undahdledRejection', (reason) => {
+  process.on('unhandledRejection', (reason) => {
     loggingService.error('Unhandled Rejection', JSON.stringify(reason));
   });
 

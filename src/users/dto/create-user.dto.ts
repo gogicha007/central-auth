@@ -1,5 +1,5 @@
 import { IsEmail, IsString } from "class-validator";
-import { UserValidators } from "../../../libs/validators/user.validators";
+import { UserValidators } from "../../common/validators/user.validators";
 
 export class CreateUserDto {
     @IsEmail({}, UserValidators.EMAIL_RULES)
