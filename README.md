@@ -5,7 +5,7 @@ This is an IAM platform with multi-tenant support.
 Users sign-up, create an organization, invite users, assign roles, manage permissions, and track sensitive actions through audit logs.
 
 Auth pattern - Session-bound JWT:
-    
+
     - JWT for stateless token transport
     - Session state in Redis for revocation, rotation and control.
 
@@ -34,13 +34,27 @@ Sign-up:
         - adds task to BullMq queue, with job.name: "send-verification-email"
         - MailProcessor(declared as a background worker) detects the task with specific job.name in queue and runs the code that sends an email
     4. User clicks the link, account becomes ACTIVE and emailVerified = true
-        - User clicks the link -> auth.controller/@Get('verify-email') catches 
+        - User clicks the link -> auth.controller/@Get('verify-email') catches
 
 Login -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
-
 
 ## Authorization
 
 Nest js guards:
 
 JwtAuthGuard -> OrganizationGuard -> RolesGuard -> PermissionsbGuard
+
+## Resopnse
+
+in case of success:
+{
+success: boolean,
+message: string
+data: string | null
+}
+
+in case of error:
+{
+statusCode: number,
+message: string
+}
