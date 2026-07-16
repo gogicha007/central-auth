@@ -36,7 +36,14 @@ Sign-up:
     4. User clicks the link, account becomes ACTIVE and emailVerified = true
         - User clicks the link -> auth.controller/@Get('verify-email') catches
 
-Login -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
+Login:
+    1. Check credentials
+    3. Update failedLoginCount field 
+        - in case of wrong password: +1
+        - in case of right password: 0
+    2. Issue access token
+    3. 
+ -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
 
 ## Authorization
 

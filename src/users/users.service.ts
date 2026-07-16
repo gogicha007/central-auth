@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { TokenType, UserStatus } from '@prisma/client';
@@ -7,12 +7,14 @@ import * as crypto from 'crypto'
 import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
 import { LoginDto } from '../auth/dto/login.dto';
+import { PasswordService } from '../common/password/password.service';
 
 @Injectable()
 export class UsersService {
     constructor(
         private readonly dbService: DatabaseService,
-        private readonly mailService: MailService
+        private readonly mailService: MailService,
+        private readonly passwordService: PasswordService
     ) { }
 
     async create(payload: CreateUserDto) {
@@ -135,7 +137,69 @@ export class UsersService {
         }
     }
 
-    async checkUserCredentials(payload: LoginDto){
-        console.log('check user credentials ', payload)
+    async validateUser(payload: LoginDto) {
+        const user = await this.dbService.user.findUnique({
+            where: { email: payload.email },
+            select: {
+                id: true,
+                emailVerified: true,
+                status: true,
+                passwordHash: true
+            }
+        })
+
+        if (!user) throw new UnauthorizedException('Invalid credentials')
+
+        const blockedStatuses: UserStatus[] = [
+            UserStatus.DEACTIVATED,
+            UserStatus.DELETED,
+            UserStatus.LOCKED,
+            UserStatus.PENDING,
+            UserStatus.SUSPENDED
+        ]
+
+        if (blockedStatuses.includes(user.status)) {
+            throw new UnauthorizedException('Invalid credentials')
+        }
+
+        const checkPassword = await this.passwordService.compare(payload.password, user.passwordHash)
+
+        if (!checkPassword) {
+            await this.dbService.$transaction(async (tx) => {
+
+                const failureCount = await tx.user.update({
+                    where: { id: user.id },
+                    data: {
+                        failedLoginCount: {
+                            increment: 1
+                        }
+                    },
+                    select: {
+                        failedLoginCount: true
+                    }
+                })
+                if (failureCount.failedLoginCount >= 5) {
+                    await tx.user.update({
+                        where: { id: user.id },
+                        data: {
+                            status: UserStatus.LOCKED
+                        }
+                    })
+                }
+            }
+            )
+            throw new UnauthorizedException('Invalid credentials')
+        }
+
+        await this.dbService.user.update({
+            where: { id: user.id },
+            data: {
+                failedLoginCount: 0
+            }
+        })
+
+        const { passwordHash, ...validUser } = user
+
+        return validUser
     }
 }
