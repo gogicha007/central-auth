@@ -6,6 +6,7 @@ import { MailService } from '../mail/mail.service';
 import * as crypto from 'crypto'
 import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
+import { LoginDto } from '../auth/dto/login.dto';
 
 @Injectable()
 export class UsersService {
@@ -132,5 +133,9 @@ export class UsersService {
         } catch (error) {
             handlePrismaError(error)
         }
+    }
+
+    async checkUserCredentials(payload: LoginDto){
+        console.log('check user credentials ', payload)
     }
 }

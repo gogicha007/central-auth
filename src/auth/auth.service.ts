@@ -17,7 +17,7 @@ export class AuthService {
     }
 
     login(payload: LoginDto) {
-        return `login payload ${JSON.stringify(payload)}`
+        return this.userService.checkUserCredentials(payload)
     }
 
     verifyEmail(token: string) {
