@@ -1,5 +1,6 @@
 import { IsEmail, IsString, MinLength } from 'class-validator'
 import { UserValidators } from '../../common/validators/user.validators'
+import { UserStatus } from '@prisma/client'
 
 export class LoginDto {
     @IsEmail({}, UserValidators.EMAIL_RULES)
@@ -11,7 +12,10 @@ export class LoginDto {
 }
 
 export class LoginResponseDto {
-    accessToken!: string
-    expiresIn!: number
-    tokenType!: string
+    id!: string
+    status!: UserStatus
+    emailVerified!: boolean
+    accessToken?: string
+    expiresIn?: number
+    tokenType?: string
 }

@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get, Patch, Query } from "@nestjs/common";
+import { Controller, Post, Body, Get, Patch, Query, UseGuards, Request } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { LoginDto } from "./dto/login.dto";
 import { SignUpDto } from "./dto/signUp.dto";
+import { LocalAuthGuard } from "./guards/local-auth.guard";
 
 @Controller('auth')
 export class AuthController {
@@ -13,9 +13,14 @@ export class AuthController {
     }
 
     //TODO: POST login
+    @UseGuards(LocalAuthGuard)
     @Post('login')
-    login(@Body() loginDto: LoginDto) {
-        return this.authService.login(loginDto)
+    // login(@Body() loginDto: LoginDto) {
+    //     return this.authService.validateUser(loginDto)
+    // }
+    async login(@Request() req) {
+        console.log('auth controller/login')
+        return req.user
     }
 
     @Get('verify-email')
@@ -29,10 +34,10 @@ export class AuthController {
         return 'refresh'
     }
 
-    //TODO: POST logout
+    @UseGuards(LocalAuthGuard)
     @Post('logout')
-    logout() {
-        return this.authService.logout()
+    async logout(@Request() req) {
+        return req.logout()
     }
     //TODO: POST sessions/:id/revoke
     @Post('sessions/:id/revoke')

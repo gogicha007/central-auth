@@ -16,12 +16,11 @@ export class AuthService {
         return this.userService.create(credentials)
     }
 
-    async login(payload: LoginDto) {
+    async validateUser(payload: LoginDto) {
         const user = await this.userService.validateUser(payload)
-        if(!user) throw new Error('wrong credentials')
-            
-        //TODO-issue access token
-        return user
+        if (user) return user
+
+        return null
     }
 
     verifyEmail(token: string) {
