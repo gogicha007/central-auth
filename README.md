@@ -42,14 +42,15 @@ Login:
         - check user in db
         - check its blocking statuses
         - check password
-        - Update failedLoginCount field 
-            - in case of wrong password: +1
+        - Update failedLoginCount field
+            - in case of wrong password: increment by 1
             - in case of right password: 0
-            - if failedLoginCount >= 5 update user status as LOCKED
+            - if failedLoginCount exceeds the limit (5) -> update user status as LOCKED
 
     2. Issue access token
-    3. 
- -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
+    3.
+
+-> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
 
 ## Authorization
 
