@@ -11,11 +11,3 @@ export class LoginDto {
     password!: string
 }
 
-export class LoginResponseDto {
-    id!: string
-    status!: UserStatus
-    emailVerified!: boolean
-    accessToken?: string
-    expiresIn?: number
-    tokenType?: string
-}

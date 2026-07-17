@@ -137,11 +137,12 @@ export class UsersService {
         }
     }
 
-    async validateUser(payload: LoginDto) {
+    async verifyUser(payload: LoginDto) {
         const user = await this.dbService.user.findUnique({
             where: { email: payload.email },
             select: {
                 id: true,
+                email: true,
                 emailVerified: true,
                 status: true,
                 passwordHash: true
@@ -198,8 +199,8 @@ export class UsersService {
             }
         })
 
-        const { passwordHash, ...validUser } = user
+        const { passwordHash, ...result } = user
 
-        return validUser
+        return result
     }
 }
