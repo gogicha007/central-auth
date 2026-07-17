@@ -194,7 +194,8 @@ export class UsersService {
         await this.dbService.user.update({
             where: { id: user.id },
             data: {
-                failedLoginCount: 0
+                failedLoginCount: 0,
+                lastLoginAt: new Date()
             }
         })
 

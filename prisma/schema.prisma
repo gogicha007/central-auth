@@ -31,7 +31,7 @@ model User {
   emailVerifiedAt     DateTime?
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
-  lastLoginAt         DateTime?            @map("last_seen")
+  lastLoginAt         DateTime?            @map("last_login_at")
   failedLoginCount    Int                  @default(0)
   organizationMembers OrganizationMember[]
   sessions            Session[]

@@ -13,6 +13,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
 import { BullModule } from '@nestjs/bullmq';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { BullModule } from '@nestjs/bullmq';
     AuthModule,
     UsersModule,
     MailModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
