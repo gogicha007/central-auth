@@ -2,6 +2,8 @@ import { Controller, Post, Body, Get, Patch, Query, UseGuards, Request } from "@
 import { AuthService } from "./auth.service";
 import { SignUpDto } from "./dto/signUp.dto";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
+import { CurrentUser } from "./decorators/current-user.decorator";
+import type { UserContext } from "./auth.types";
 
 @Controller('auth')
 export class AuthController {
@@ -15,9 +17,9 @@ export class AuthController {
     //TODO: POST login
     @UseGuards(LocalAuthGuard)
     @Post('login')
-    async login(@Request() req) {
+    async login(@CurrentUser() user: UserContext) {
         console.log('auth controller/login')
-        return req.user
+        return user
     }
 
     @Get('verify-email')
