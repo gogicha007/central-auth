@@ -143,7 +143,6 @@ export class UsersService {
             select: {
                 id: true,
                 email: true,
-                emailVerified: true,
                 status: true,
                 passwordHash: true
             }
