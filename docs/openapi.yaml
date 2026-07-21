@@ -175,6 +175,27 @@ paths:
 
   /auth/login:
     post:
+      summary: Login user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: logint user
   /auth/refresh:
     post:
   /auth/logout:
