@@ -32,12 +32,13 @@ export class AuthController {
         return 'refresh'
     }
 
-    //TODO: POST logou
+    //TODO: POST logout
     @UseGuards(LocalAuthGuard)
     @Post('logout')
     async logout() {
         return 'logout'
     }
+    
     //TODO: POST sessions/:id/revoke
     @Post('sessions/:id/revoke')
     sessinsRevoke() {
