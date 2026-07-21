@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: Central Auth System
+  version: 1.0.0
+  description: API for central authentication
+
+paths:
+  /auth/signup:
+    post:
+      summary: Create user
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+
+      responses:
+        '201':
+          description: create user and send verification email
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'User created. Please check your email to verify your account'
+                  data:
+                    type: object
+                    required:
+                      - id
+                      - email
+                      - firstName
+                      - lastName
+                      - status
+                      - emailVerified
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: '123e4567-e89b-12d3-a456-426614174000'
+                      email:
+                        type: string
+                        format: email
+                        example: 'user@example.com'
+                      status:
+                        type: string
+                        enum:
+                          [
+                            PENDING,
+                            ACTIVE,
+                            SUSPENDED,
+                            LOCKED,
+                            DEACTIVATED,
+                            DELETED,
+                          ]
+                        example: 'PENDING'
+                      firstName:
+                        type: string
+                        example: 'John'
+                      lastName:
+                        type: string
+                        example: 'Doe'
+                      emailVerified:
+                        type: boolean
+                        example: true
+        # Error responses (400 bad request, 409 conflict, ...)
+        '400':
+          description: Bad request (prisma errors)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - statusCode
+                  - message
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: 'Invalie credentials'
+
+        '409':
+          description: Conflict exception(User with email already exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - statusCode
+                  - message
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 409
+                  message:
+                    type: string
+                    example: "User with this email already exists"
+        '500':
+          description: Internal server error
+
+  /auth/verify-email:
+    get:
+  /auth/login:
+    post:
+  /auth/refresh:
+    post:
+  /auth/logout:
+    post:
+  /auth/sessions/:id/revoke:
+    post:
+  /auth/sessions:
+    get:
+  /auth/organizations:
+    post:
+  /auth/organizations/:id/invitations:
+    post:
+  /auth/invitations/accept:
+    post:
+  /auth/organizations/:id/members/role:
+    patsh:
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 01KXG8848PVGZBKQKZ5S1H5J20
+    Organization:
+      type: object
+    OrganizationMember:
+      type: object
+    Role:
+      type: object
+    Permission:
+      type: object
+    RolePermission:
+      type: object
+    Invitation:
+      type: object
+    Session:
+      type: object
+    UserToken:
+      type: object
+    AuditLog:
+      type: object
+
+  Errorresponse:
+    type: object

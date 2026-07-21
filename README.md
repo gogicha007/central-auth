@@ -48,7 +48,7 @@ Login:
             - if failedLoginCount exceeds the limit (5) -> update user status as LOCKED
 
     2. Issue access token
-    3.
+    3. 
 
 -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
 

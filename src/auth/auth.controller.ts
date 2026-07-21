@@ -45,7 +45,7 @@ export class AuthController {
     }
 
     //TODO: GET sessions
-    @Get('sessiong')
+    @Get('sessions')
     sessions() {
         return 'sessions'
     }

@@ -8,6 +8,7 @@ import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
 import { LoginDto } from '../auth/dto/login.dto';
 import { PasswordService } from '../common/password/password.service';
+import { CreateUserResponseDto } from './dto/create-user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -29,7 +30,7 @@ export class UsersService {
             const { email, firstName, lastName, passwordHash } = payload
             const verificationToken = crypto.randomBytes(32).toString('hex')
 
-            const createdUser = await this.dbService.$transaction(async (tx) => {
+            const createdUser: CreateUserResponseDto = await this.dbService.$transaction(async (tx) => {
                 // create user
                 const newUser = await tx.user.create({
                     data: {

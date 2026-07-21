@@ -1,5 +1,5 @@
 import { IsEmail, IsString, MinLength } from "class-validator";
-import { UserStatus } from "@prisma/client";
+
 
 export class SignUpDto {
     @IsEmail({}, { message: 'invalid email' })
@@ -15,11 +15,3 @@ export class SignUpDto {
     lastName!: string
 }
 
-export class SignUpResonseDto {
-    email!: string
-
-    firstName!: string
-    lastName!: string
-
-    status?: UserStatus
-}
