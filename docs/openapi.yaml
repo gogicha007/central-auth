@@ -196,6 +196,29 @@ paths:
       responses:
         '200':
           description: logint user
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                  - tokenType
+                  - expiresIn
+                properties:
+                  acceptToken:
+                    type: string
+                    example: E3ODQ3MTYxMjksImV4cCI6MTc4NDcxNzAyOX0...
+                  refreshToken:
+                    type: string
+                    example: 9uIjowLCJpYXQiOjE3ODQ3MTYxMjksImV4cCI6MTc4NzMwODEyOX0...
+                  tokenType:
+                    type: string
+                    example: bearer
+                  expiresIn:
+                    type: number
+                    example: 900
+
   /auth/refresh:
     post:
       summary: refresh token

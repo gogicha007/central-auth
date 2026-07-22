@@ -51,6 +51,7 @@ export class AuthService {
         const session = await this.sessionsService.createSession(user.id, ip, userAgent)
 
         const accessPayload = this.createTokenPayload(user, session.id)
+
         const accessToken = this.jwtService.sign(accessPayload, this.getJwtOptions(
             'JWT_ACCESS_TOKEN_SECRET',
             `${this.configService.getOrThrow<string>('JWT_TTL_M')}m`
@@ -63,7 +64,7 @@ export class AuthService {
 
         const refreshToken = this.jwtService.sign(refreshPayload, this.getJwtOptions(
             'JWT_REFRESH_TOKEN_SECRET',
-            this.configService.getOrThrow<string>('REFRESH_TTL')
+            `${this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D')}d`
         ))
 
         return {
