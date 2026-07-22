@@ -26,30 +26,49 @@ export class SessionsService {
     ip: null | string = null,
     userAgent: null | string = null
   ) {
-    const lastActivity = new Date();
+    const now = new Date()
 
     const absoluteTtlDays = this.getPositiveIntConfig('SESSION_ABSOLUTE_TTL_D');
     const idleTtlHours = this.getPositiveIntConfig('SESSION_IDLE_TTL_H');
 
-    const expiresAt = new Date(lastActivity);
+    const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + absoluteTtlDays);
 
-    const idleExpiresAt = new Date(lastActivity);
+    const idleExpiresAt = new Date(now);
     idleExpiresAt.setHours(idleExpiresAt.getHours() + idleTtlHours);
 
     try {
-      const session = await this.dbService.session.create({
-        data: {
-          userId,
-          ip,
-          userAgent,
-          lastActivity,
-          expiresAt,
-          idleExpiresAt,
+      return await this.dbService.$transaction(async (tx) => {
+        const activeSession = await tx.session.findFirst({
+          where: {
+            userId,
+            revokedAt: null,
+            expoiresAt: { gt: now },
+            idleExpiresAt: { gt: now }
+          },
+          select: { id: true }
+        })
+        if(activeSession) {
+          await tx.session.update({
+            where: { id: activeSession.id},
+            data: {
+              revokedAt: now,
+              revodedReason: 'replaced'
+            }
+          })
         }
-      })
 
-      return session;
+        return tx.session.create({
+          data: {
+            userId,
+            ip,
+            userAgent,
+            lastActivity: now,
+            expiresAt,
+            idleExpiresAt
+          }
+        })
+      })
     } catch (error) {
       handlePrismaError(error)
     }
@@ -71,4 +90,21 @@ export class SessionsService {
       handlePrismaError(error)
     }
   }
+
+  async revokeSession(sessionId: string, reason?: string | null) {
+    const now = new Date()
+
+    const revokedSession = await this.dbService.session.update({
+      where: {
+        id: sessionId
+      },
+      data: {
+        revokedAt: now,
+        revokedReason: reason
+      }
+    })
+
+    return revokedSession
+  }
+
 }

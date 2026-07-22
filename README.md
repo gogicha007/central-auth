@@ -2,7 +2,7 @@
 
 This is an IAM platform with multi-tenant support.
 
-As the user can be member of different organization inside the system,   after sign-up is invited to organization.
+As the user can be member of different organization inside the system, after sign-up is invited to organization.
 
 Users sign-up, create an organization, invite users, assign roles, manage permissions, and track sensitive actions through audit logs.
 
@@ -49,7 +49,7 @@ Login:
             - in case of right password: 0
             - if failedLoginCount exceeds the limit (5) -> update user status as LOCKED
 
-    2. Create session 
+    2. Create session
         - set session absolute expiration time (30 days)
         - set session idle expiration time (72 hours)
         - Postgres Session record
@@ -58,8 +58,6 @@ Login:
     3. Issue Access token & Refresh token
         - set access token secret&ttl and create
         - set refresh token secret&ttl and create
-
-
 
 ## Authorization
 

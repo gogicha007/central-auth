@@ -239,9 +239,10 @@ paths:
       summary: invite user to organization
   /auth/invitations/accept:
     post:
-      summbary: accept invitation
+      summary: accept invitation
   /auth/organizations/:id/members/role:
-    patch: summary; assign role to user
+    patch:
+      summary: assign role to user
 
 components:
   schemas:
