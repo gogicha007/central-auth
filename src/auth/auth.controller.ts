@@ -38,10 +38,9 @@ export class AuthController {
         return this.authService.verifyEmail(token)
     }
 
-    //TODO: POST refresh token
     @Post('refresh')
-    refresh() {
-        return 'refresh'
+    refresh(@Body('refreshToken') refreshToken: string) {
+        return this.authService.refresh(refreshToken)
     }
 
     //TODO: POST logout

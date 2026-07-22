@@ -15,14 +15,18 @@ describe('AuthService.login', () => {
 
   beforeEach(async () => {
     sessionsService = { createSession: jest.fn() };
-    jwtService = { sign: jest.fn().mockReturnValue('token') };
+    jwtService = { sign: jest.fn() };
     configService = {
       getOrThrow: jest.fn((key: string) => {
         switch (key) {
           case 'JWT_ACCESS_TOKEN_SECRET':
-            return 'secret';
+            return 'access-secret';
+          case 'JWT_REFRESH_TOKEN_SECRET':
+            return 'refresh-secret';
           case 'JWT_TTL_M':
             return '15';
+          case 'REFRESH_TTL':
+            return '30d';
           default:
             return '';
         }
@@ -43,25 +47,25 @@ describe('AuthService.login', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
-  it('waits for session creation before issuing a token', async () => {
-    let resolveSession: ((value: unknown) => void) | undefined;
-    const sessionPromise = new Promise((resolve) => {
-      resolveSession = resolve;
-    });
+  it('issues both access and refresh tokens after creating a session', async () => {
+    sessionsService.createSession.mockResolvedValue({ id: 'session-1' });
+    jwtService.sign
+      .mockReturnValueOnce('access-token')
+      .mockReturnValueOnce('refresh-token');
 
-    sessionsService.createSession.mockReturnValue(sessionPromise);
-
-    const loginPromise = authService.login({
+    const result = await authService.login({
       id: 'user-1',
       email: 'user@example.com',
+      status: 'ACTIVE',
     } as any);
 
-    expect(jwtService.sign).not.toHaveBeenCalled();
-
-    resolveSession?.({ id: 'session-1' });
-    await loginPromise;
-
-    expect(sessionsService.createSession).toHaveBeenCalledWith('user-1');
-    expect(jwtService.sign).toHaveBeenCalledTimes(1);
+    expect(sessionsService.createSession).toHaveBeenCalledWith('user-1', undefined, undefined);
+    expect(jwtService.sign).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(
+      expect.objectContaining({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      }),
+    );
   });
 });

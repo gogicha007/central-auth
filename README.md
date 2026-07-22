@@ -2,6 +2,8 @@
 
 This is an IAM platform with multi-tenant support.
 
+As the user can be member of different organization inside the system,   after sign-up is invited to organization.
+
 Users sign-up, create an organization, invite users, assign roles, manage permissions, and track sensitive actions through audit logs.
 
 Auth pattern - Session-bound JWT:
@@ -51,7 +53,8 @@ Login:
         - set session absolute expiration time (30 days)
         - set session idle expiration time (72 hours)
 
-    3. Issue access token
+    3. Issue Access token & Refresh token
+    
     4. 
 
 -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record

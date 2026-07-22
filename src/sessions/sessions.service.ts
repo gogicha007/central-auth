@@ -26,8 +26,6 @@ export class SessionsService {
     ip: null | string = null,
     userAgent: null | string = null
   ) {
-    console.log('create session, userId', userId);
-
     const lastActivity = new Date();
 
     const absoluteTtlDays = this.getPositiveIntConfig('SESSION_ABSOLUTE_TTL_D');
@@ -39,7 +37,6 @@ export class SessionsService {
     const idleExpiresAt = new Date(lastActivity);
     idleExpiresAt.setHours(idleExpiresAt.getHours() + idleTtlHours);
 
-    console.log('createSession, idleExpiresAt', idleExpiresAt)
     try {
       const session = await this.dbService.session.create({
         data: {
@@ -53,6 +50,23 @@ export class SessionsService {
       })
 
       return session;
+    } catch (error) {
+      handlePrismaError(error)
+    }
+  }
+
+  async getSession(sessionId: string) {
+    try {
+      return await this.dbService.session.findUnique({
+        where: { id: sessionId },
+        select: {
+          id: true,
+          userId: true,
+          expiresAt: true,
+          revokedAt: true,
+          refreshVersion: true,
+        },
+      });
     } catch (error) {
       handlePrismaError(error)
     }

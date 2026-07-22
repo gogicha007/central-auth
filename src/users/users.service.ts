@@ -138,6 +138,17 @@ export class UsersService {
         }
     }
 
+    async findById(userId: string) {
+        return this.dbService.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                status: true,
+            },
+        })
+    }
+
     async verifyUser(payload: LoginDto) {
         const user = await this.dbService.user.findUnique({
             where: { email: payload.email },
