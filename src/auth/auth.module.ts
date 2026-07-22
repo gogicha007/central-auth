@@ -6,9 +6,10 @@ import { PasswordModule } from '../common/password/password.module';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtService } from '@nestjs/jwt';
+import { SessionsModule } from '../sessions/sessions.module';
 
 @Module({
-	imports: [PasswordModule, UsersModule, PassportModule],
+	imports: [PasswordModule, UsersModule, PassportModule, SessionsModule],
 	providers: [AuthService, LocalStrategy, JwtService],
 	controllers: [AuthController],
 })

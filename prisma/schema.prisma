@@ -144,7 +144,8 @@ model Session {
   ip             String? // ip from where the session opened
   userAgent      String?   @map("user_agent") // browser/mobile/
   lastActivity   DateTime  @map("last_activity")
-  expiresAt      DateTime  @map("expires_at")
+  expiresAt      DateTime  @map("expires_at") // SESSION ABSOLUTE
+  idleExpiresAt  DateTime  @map("idle_expires_at")  // SESSION IDLE
   revokedAt      DateTime? @map("revoked_at")
   revokedReason  String?   @map("revoked_reason")
   refreshVersion Int       @default(0) @map("refresh_version")

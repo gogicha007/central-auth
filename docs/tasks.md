@@ -44,6 +44,10 @@
     [x] mail service
     [x] mail processor
 
+## Session module
+    [ ] create session
+    [ ] revoke
+    
 ## Common
 
     [x] password module/service
