@@ -45,7 +45,7 @@
     [x] mail processor
 
 ## Session module
-    [ ] create session
+    [x] create session
     [ ] revoke
     
 ## Common

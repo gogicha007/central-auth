@@ -32,7 +32,7 @@ export class AuthService {
     }
 
     async login(user: LoginResponseDto) {
-        const session = this.sessionsService.createSession(user.id)
+        const session = await this.sessionsService.createSession(user.id)
         console.log("login, session", session)
         
         const expiresAccessToken = new Date()

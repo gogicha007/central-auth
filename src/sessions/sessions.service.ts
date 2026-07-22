@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '@nestjs/config';
+import { handlePrismaError } from '../common/filters/error.util';
 
 @Injectable()
 export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);
@@ -20,20 +21,40 @@ export class SessionsService {
     return value;
   }
 
-  createSession(userId: string) {
+  async createSession(
+    userId: string,
+    ip: null | string = null,
+    userAgent: null | string = null
+  ) {
     console.log('create session, userId', userId);
 
-    const now = new Date();
+    const lastActivity = new Date();
 
     const absoluteTtlDays = this.getPositiveIntConfig('SESSION_ABSOLUTE_TTL_D');
     const idleTtlHours = this.getPositiveIntConfig('SESSION_IDLE_TTL_H');
 
-    const expiresAt = new Date(now);
+    const expiresAt = new Date(lastActivity);
     expiresAt.setDate(expiresAt.getDate() + absoluteTtlDays);
 
-    const idleExpiresAt = new Date(now);
+    const idleExpiresAt = new Date(lastActivity);
     idleExpiresAt.setHours(idleExpiresAt.getHours() + idleTtlHours);
 
-    return 'session';
+    try {
+      const session = await this.dbService.session.create({
+        data: {
+          userId,
+          ip,
+          userAgent,
+          lastActivity,
+          expiresAt,
+          idleExpiresAt,
+        }
+      })
+
+      return session;
+    } catch (error) {
+      handlePrismaError(error)
+    }
+
   }
 }
