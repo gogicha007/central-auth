@@ -198,20 +198,27 @@ paths:
           description: logint user
   /auth/refresh:
     post:
+      summary: refresh token
   /auth/logout:
     post:
+      summary: logout user
   /auth/sessions/:id/revoke:
     post:
+      summary: revoke token
   /auth/sessions:
     get:
+      summary: get sessions
   /auth/organizations:
     post:
+      summary: create organization
   /auth/organizations/:id/invitations:
     post:
+      summary: invite user to organization
   /auth/invitations/accept:
     post:
+      summbary: accept invitation
   /auth/organizations/:id/members/role:
-    patsh:
+    patch: summary; assign role to user
 
 components:
   schemas:
