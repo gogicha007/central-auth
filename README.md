@@ -47,9 +47,12 @@ Login:
             - in case of right password: 0
             - if failedLoginCount exceeds the limit (5) -> update user status as LOCKED
 
-    2. Create session, 30 days
+    2. Create session 
+        - set session absolute expiration time (30 days)
+        - set session idle expiration time (72 hours)
+
     3. Issue access token
-    3. 
+    4. 
 
 -> Access Token (15min) -> Refresh Token (30 days) -> Redis Session -> Postgres Session record
 

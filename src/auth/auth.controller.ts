@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Get, Patch, Query, UseGuards } from "@nestjs/common";
+import { Controller, Post, Body, Get, Patch, Query, Req, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { SignUpDto } from "./dto/signUp.dto";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
 import type { UserContext } from "./auth.types";
+import type { Request } from 'express'
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +18,19 @@ export class AuthController {
     //TODO: POST login
     @UseGuards(LocalAuthGuard)
     @Post('login')
-    async login(@CurrentUser() user: UserContext) {
-        return this.authService.login(user)
+    async login(@Req() req: Request, @CurrentUser() user: UserContext) {
+        const forwarded = req.headers['x-forwarded-for']
+        const forwardedIp = Array.isArray(forwarded)
+            ? forwarded[0]
+            : forwarded
+            
+        const ip = forwardedIp ?? req.ip ?? undefined
+
+        const userAgent = typeof req.headers['user-agent'] === 'string'
+            ? req.headers['user-agent']
+            : undefined
+
+        return this.authService.login(user, ip, userAgent)
     }
 
     @Get('verify-email')
@@ -38,7 +50,7 @@ export class AuthController {
     async logout() {
         return 'logout'
     }
-    
+
     //TODO: POST sessions/:id/revoke
     @Post('sessions/:id/revoke')
     sessinsRevoke() {

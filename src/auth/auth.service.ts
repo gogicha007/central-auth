@@ -31,20 +31,20 @@ export class AuthService {
         return null
     }
 
-    async login(user: LoginResponseDto) {
-        const session = await this.sessionsService.createSession(user.id)
+    async login(user: LoginResponseDto, ip?: string | undefined, userAgent?: string | null) {
+        const session = await this.sessionsService.createSession(user.id, ip, userAgent)
         console.log("login, session", session)
-        
+
         const expiresAccessToken = new Date()
-        
+
         expiresAccessToken.setMinutes(
             expiresAccessToken.getMinutes() +
             parseInt(this.configService.getOrThrow<string>("JWT_TTL_M"))
         )
         console.log("login, expiresAccessToken+15m", expiresAccessToken)
-        
+
         const payload = { username: user.email, sub: user.id }
-        
+
         console.log("login, payload", payload)
 
         const accessToken = this.jwtService.sign(payload, {

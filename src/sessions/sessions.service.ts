@@ -39,6 +39,7 @@ export class SessionsService {
     const idleExpiresAt = new Date(lastActivity);
     idleExpiresAt.setHours(idleExpiresAt.getHours() + idleTtlHours);
 
+    console.log('createSession, idleExpiresAt', idleExpiresAt)
     try {
       const session = await this.dbService.session.create({
         data: {
@@ -55,6 +56,5 @@ export class SessionsService {
     } catch (error) {
       handlePrismaError(error)
     }
-
   }
 }
