@@ -24,8 +24,8 @@ import { SessionsModule } from './sessions/sessions.module';
     BullModule.forRoot({
       connection: {
         host: 'localhost',
-        port: 6379
-      }
+        port: 6379,
+      },
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],

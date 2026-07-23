@@ -1,94 +1,100 @@
-import { Controller, Post, Body, Get, Patch, Query, Req, UseGuards } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { SignUpDto } from "./dto/signUp.dto";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
-import { CurrentUser } from "./decorators/current-user.decorator";
-import type { UserContext } from "./auth.types";
-import type { Request } from 'express'
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Patch,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { SignUpDto } from './dto/signUp.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { UserContext } from './auth.types';
+import type { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('signup')
-    signUp(@Body() signUpDto: SignUpDto) {
-        return this.authService.signUp(signUpDto)
-    }
+  @Post('signup')
+  signUp(@Body() signUpDto: SignUpDto) {
+    return this.authService.signUp(signUpDto);
+  }
 
-    //TODO: POST login
-    @UseGuards(LocalAuthGuard)
-    @Post('login')
-    async login(@Req() req: Request, @CurrentUser() user: UserContext) {
-        const forwarded = req.headers['x-forwarded-for']
-        const forwardedIp = Array.isArray(forwarded)
-            ? forwarded[0]
-            : forwarded
-            
-        const ip = forwardedIp ?? req.ip ?? undefined
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Req() req: Request, @CurrentUser() user: UserContext) {
+    const forwarded = req.headers['x-forwarded-for'];
+    const forwardedIp = Array.isArray(forwarded) ? forwarded[0] : forwarded;
 
-        const userAgent = typeof req.headers['user-agent'] === 'string'
-            ? req.headers['user-agent']
-            : undefined
+    const ip = forwardedIp ?? req.ip ?? undefined;
 
-        return this.authService.login(user, ip, userAgent)
-    }
+    const userAgent =
+      typeof req.headers['user-agent'] === 'string'
+        ? req.headers['user-agent']
+        : undefined;
 
-    @Get('verify-email')
-    verifyEmail(@Query('token') token: string) {
-        return this.authService.verifyEmail(token)
-    }
+    return this.authService.login(user, ip, userAgent);
+  }
 
-    @Post('refresh')
-    refresh(@Body('refreshToken') refreshToken: string) {
-        return this.authService.refresh(refreshToken)
-    }
+  @Get('verify-email')
+  verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
 
-    //TODO: POST logout
-    @UseGuards(LocalAuthGuard)
-    @Post('logout')
-    async logout() {
-        return 'logout'
-    }
+  @Post('refresh')
+  refresh(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refresh(refreshToken);
+  }
 
-    //TODO: POST sessions/:id/revoke
-    @Post('sessions/:id/revoke')
-    sessinsRevoke() {
-        return 'sessions revoke'
-    }
+  //TODO: POST logout
+  @UseGuards(LocalAuthGuard)
+  @Post('logout')
+  logout() {
+    return 'logout';
+  }
 
-    //TODO: GET sessions
-    @Get('sessions')
-    sessions() {
-        return 'sessions'
-    }
+  //TODO: POST sessions/:id/revoke
+  @Post('sessions/:id/revoke')
+  sessinsRevoke() {
+    return 'sessions revoke';
+  }
 
-    //TODO: POST organizations
-    @Post('organizations')
-    orgainzations() {
-        return 'organization'
-    }
+  //TODO: GET sessions
+  @Get('sessions')
+  sessions() {
+    return 'sessions';
+  }
 
-    //TODO: POST organization/:id/invitation
-    @Post('organizations/:id/invitations')
-    orgInvitacions() {
-        return 'organization invitations'
-    }
+  //TODO: POST organizations
+  @Post('organizations')
+  orgainzations() {
+    return 'organization';
+  }
 
-    //TODO: POST invitaciont/accept
-    @Post('invitations/accept')
-    invitacionAccept() {
-        return 'invitation accept'
-    }
+  //TODO: POST organization/:id/invitation
+  @Post('organizations/:id/invitations')
+  orgInvitacions() {
+    return 'organization invitations';
+  }
 
-    //TODO: PATCH organiztions/:id/members/role
-    @Patch('organizations/:id/members/:memberId/role')
-    membershipRoles() {
-        return 'membership roles'
-    }
+  //TODO: POST invitaciont/accept
+  @Post('invitations/accept')
+  invitacionAccept() {
+    return 'invitation accept';
+  }
 
-    @Get()
-    health() {
-        return 'get outh requested'
-    }
+  //TODO: PATCH organiztions/:id/members/role
+  @Patch('organizations/:id/members/:memberId/role')
+  membershipRoles() {
+    return 'membership roles';
+  }
 
+  @Get()
+  health() {
+    return 'get outh requested';
+  }
 }

@@ -11,7 +11,10 @@ describe('SessionsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SessionsService,
-        { provide: DatabaseService, useValue: { session: { create: jest.fn() } } },
+        {
+          provide: DatabaseService,
+          useValue: { session: { create: jest.fn() } },
+        },
         {
           provide: ConfigService,
           useValue: {

@@ -54,9 +54,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit {
     );
     const pool = new PrismaPg({
       connectionString,
-      ssl: allowInsecureTls
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: allowInsecureTls ? { rejectUnauthorized: false } : undefined,
     });
 
     super({ adapter: pool });

@@ -59,7 +59,11 @@ describe('AuthService.login', () => {
       status: 'ACTIVE',
     } as any);
 
-    expect(sessionsService.createSession).toHaveBeenCalledWith('user-1', undefined, undefined);
+    expect(sessionsService.createSession).toHaveBeenCalledWith(
+      'user-1',
+      undefined,
+      undefined,
+    );
     expect(jwtService.sign).toHaveBeenCalledTimes(2);
     expect(result).toEqual(
       expect.objectContaining({

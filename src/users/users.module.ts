@@ -7,6 +7,6 @@ import { PasswordModule } from '../common/password/password.module';
 @Module({
   imports: [MailModule, DatabaseModule, PasswordModule],
   providers: [UsersService],
-  exports: [UsersService]
+  exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

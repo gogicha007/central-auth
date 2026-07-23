@@ -8,7 +8,7 @@ export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);
@@ -24,9 +24,9 @@ export class SessionsService {
   async createSession(
     userId: string,
     ip: null | string = null,
-    userAgent: null | string = null
+    userAgent: null | string = null,
   ) {
-    const now = new Date()
+    const now = new Date();
 
     const absoluteTtlDays = this.getPositiveIntConfig('SESSION_ABSOLUTE_TTL_D');
     const idleTtlHours = this.getPositiveIntConfig('SESSION_IDLE_TTL_H');
@@ -44,18 +44,18 @@ export class SessionsService {
             userId,
             revokedAt: null,
             expoiresAt: { gt: now },
-            idleExpiresAt: { gt: now }
+            idleExpiresAt: { gt: now },
           },
-          select: { id: true }
-        })
-        if(activeSession) {
+          select: { id: true },
+        });
+        if (activeSession) {
           await tx.session.update({
-            where: { id: activeSession.id},
+            where: { id: activeSession.id },
             data: {
               revokedAt: now,
-              revodedReason: 'replaced'
-            }
-          })
+              revodedReason: 'replaced',
+            },
+          });
         }
 
         return tx.session.create({
@@ -65,12 +65,12 @@ export class SessionsService {
             userAgent,
             lastActivity: now,
             expiresAt,
-            idleExpiresAt
-          }
-        })
-      })
+            idleExpiresAt,
+          },
+        });
+      });
     } catch (error) {
-      handlePrismaError(error)
+      handlePrismaError(error);
     }
   }
 
@@ -87,24 +87,23 @@ export class SessionsService {
         },
       });
     } catch (error) {
-      handlePrismaError(error)
+      handlePrismaError(error);
     }
   }
 
   async revokeSession(sessionId: string, reason?: string | null) {
-    const now = new Date()
+    const now = new Date();
 
     const revokedSession = await this.dbService.session.update({
       where: {
-        id: sessionId
+        id: sessionId,
       },
       data: {
         revokedAt: now,
-        revokedReason: reason
-      }
-    })
+        revokedReason: reason,
+      },
+    });
 
-    return revokedSession
+    return revokedSession;
   }
-
 }

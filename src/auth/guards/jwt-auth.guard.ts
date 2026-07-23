@@ -36,7 +36,6 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing bearer token!');
     }
 
-    
     return true;
   }
 }

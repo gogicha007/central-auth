@@ -1,10 +1,10 @@
-import { UserStatus } from "@prisma/client"
+import { UserStatus } from '@prisma/client';
 
 export class LoginResponseDto {
-    id!: string
-    email!: string
-    status!: UserStatus
-    accessToken?: string
-    expiresIn?: number
-    tokenType?: string
+  id!: string;
+  email!: string;
+  status!: UserStatus;
+  accessToken?: string;
+  expiresIn?: number;
+  tokenType?: string;
 }

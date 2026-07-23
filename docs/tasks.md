@@ -15,9 +15,14 @@
     [x] Sign-up
         [x] hash the password
         [x] call to create user(usersService.create())
-    [ ] Login
+    [x] Login
+    [ ] JwtStrategy
+    [ ] JwtAuthGuard logic to rely on strategy + session validation
     [ ] Logout
+        
     [ ] Refresh
+        [x] refresh token
+        [ ] refresh rotation
     [ ] Create organization
     [ ] Membership
     [ ] Invite
@@ -27,9 +32,9 @@
         [ ] superAdmin(@isSuperAdmin decorator)
         [ ] admin(@IsAdmin decorator)
         [ ] manager(@IsManager decorator)
-    [ ] logging service
-    [ ] middleware(logging service)
-    [ ] exception filters
+    [x] logging service
+    [x] middleware(logging service)
+    [x] exception filters
 
 ## User module
 
@@ -46,7 +51,7 @@
 
 ## Session module
     [x] create session
-    [ ] revoke
+    [x] revoke
     
 ## Common
 
