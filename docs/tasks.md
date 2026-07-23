@@ -53,6 +53,10 @@
     [x] create session
     [x] revoke
     
+## Redis module
+    [ ] create Redis session
+    [ ] Redis session reload in case of server reload
+    
 ## Common
 
     [x] password module/service

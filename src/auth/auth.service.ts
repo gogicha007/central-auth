@@ -8,16 +8,19 @@ import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../sessions/sessions.service';
 import { JwtPayload } from './auth.types';
+import { RedisService } from '../redis/redis.service';
+import { computeSessionTtlSeconds } from '../common/utils/session-helper';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly sessionsService: SessionsService,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
-    private readonly configService: ConfigService,
-  ) {}
+    private readonly redisService: RedisService
+  ) { }
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -58,6 +61,15 @@ export class AuthService {
       ip,
       userAgent,
     );
+
+    const redisSessionTtl = computeSessionTtlSeconds(session.expiresAt, session.idleExpiresAt)
+
+    await this.redisService.getOrSet(
+      session.id,
+      () => this.sessionsService.getSession(session.id),
+      redisSessionTtl
+    )
+
 
     const accessPayload = this.createTokenPayload(user, session.id);
 

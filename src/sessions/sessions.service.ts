@@ -82,6 +82,7 @@ export class SessionsService {
           id: true,
           userId: true,
           expiresAt: true,
+          idleExpiresAt: true,
           revokedAt: true,
           refreshVersion: true,
         },

@@ -14,6 +14,7 @@ export class RedisService {
     if (cached) return JSON.parse(cached) as T;
 
     const freshData = await fn();
+    
     await this.redis.set(key, JSON.stringify(freshData), 'EX', ttlSeconds);
     return freshData;
   }
