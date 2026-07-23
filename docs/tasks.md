@@ -25,13 +25,13 @@
         [x] Issue access token
         [x] Issue refresh token
 
-    [ ] Refresh endpoint
+    [x] Refresh endpoint
         [x] verify token
-        [ ] check redis session
-        [ ] check Postgres revocation
-        [ ] rotate refresh token
+        [x] check redis session
+        [x] check Postgres revocation
+        [x] rotate refresh token
 
-    [ ] JwtStrategy
+    [x] JwtStrategy
     [ ] JwtAuthGuard logic to rely on strategy + session validation
     [ ] Logout
 
