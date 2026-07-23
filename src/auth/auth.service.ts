@@ -4,12 +4,18 @@ import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { UsersService } from '../users/users.service';
 import { PasswordService } from '../common/password/password.service';
-import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../sessions/sessions.service';
 import { JwtPayload } from './auth.types';
 import { RedisService } from '../redis/redis.service';
-import { computeSessionTtlSeconds } from '../common/utils/session-helper';
+import { isSessionActive } from '../common/utils/session-helper';
+import {
+  cacheSession,
+  createTokenPayload,
+  getSessionForAuth,
+  getJwtOptions,
+} from './auth-session-cache.util';
 
 @Injectable()
 export class AuthService {
@@ -40,21 +46,6 @@ export class AuthService {
     return null;
   }
 
-  private getJwtOptions(secretKey: string, ttl: string): JwtSignOptions {
-    return {
-      secret: this.configService.getOrThrow(secretKey),
-      expiresIn: ttl as JwtSignOptions['expiresIn'],
-    };
-  }
-
-  private createTokenPayload(user: LoginResponseDto, sessionId: string) {
-    return {
-      sub: user.id,
-      sid: sessionId,
-      email: user.email,
-    } satisfies JwtPayload;
-  }
-
   async login(user: LoginResponseDto, ip?: string, userAgent?: string | null) {
     const session = await this.sessionsService.createSession(
       user.id,
@@ -62,20 +53,14 @@ export class AuthService {
       userAgent,
     );
 
-    const redisSessionTtl = computeSessionTtlSeconds(session.expiresAt, session.idleExpiresAt)
+    await cacheSession(this.redisService, session);
 
-    await this.redisService.getOrSet(
-      session.id,
-      () => this.sessionsService.getSession(session.id),
-      redisSessionTtl
-    )
-
-
-    const accessPayload = this.createTokenPayload(user, session.id);
+    const accessPayload = createTokenPayload(user, session.id);
 
     const accessToken = this.jwtService.sign(
       accessPayload,
-      this.getJwtOptions(
+      getJwtOptions(
+        this.configService,
         'JWT_ACCESS_TOKEN_SECRET',
         `${this.configService.getOrThrow<string>('JWT_TTL_M')}m`,
       ),
@@ -88,7 +73,8 @@ export class AuthService {
 
     const refreshToken = this.jwtService.sign(
       refreshPayload,
-      this.getJwtOptions(
+      getJwtOptions(
+        this.configService,
         'JWT_REFRESH_TOKEN_SECRET',
         `${this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D')}d`,
       ),
@@ -119,9 +105,13 @@ export class AuthService {
         },
       );
 
-      const session = await this.sessionsService.getSession(payload.sid);
-      if (!session || session.revokedAt || session.expiresAt < new Date()) {
-        throw new UnauthorizedException('Invalid refresh token');
+      const session = await getSessionForAuth(
+        this.redisService,
+        this.sessionsService,
+        payload.sid,
+      );
+      if (!session || !isSessionActive(session)) {
+        throw new UnauthorizedException('Invalid session');
       }
 
       if (session.refreshVersion !== payload.version) {
@@ -134,8 +124,9 @@ export class AuthService {
       }
 
       const accessToken = this.jwtService.sign(
-        this.createTokenPayload(user, session.id),
-        this.getJwtOptions(
+        createTokenPayload(user, session.id),
+        getJwtOptions(
+          this.configService,
           'JWT_ACCESS_TOKEN_SECRET',
           `${this.configService.getOrThrow<string>('JWT_TTL_M')}m`,
         ),

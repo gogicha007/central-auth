@@ -5,24 +5,36 @@
 ## Redis module
 
     [x] Redis module
+    [x] Redis service(get, set, delete)
+    [ ] Redis session reload in case of server reload
 
 ## Logging service
 
-## User module
-
 ## Auth module
 
-    [x] Sign-up
+    [x] Sign-up endpoint
         [x] hash the password
-        [x] call to create user(usersService.create())
-    [x] Login
+        [x] create user record
+        [x] send email link
+        [x] verify email
+
+    [x] Login endpoint
+        [x] validate credentials(email&password)
+        [x] create Postgres session row
+        [x] Create Redis session entry keyed by session id
+        [x] Issue access token
+        [x] Issue refresh token
+
+    [ ] Refresh endpoint
+        [x] verify token
+        [ ] check redis session
+        [ ] check Postgres revocation
+        [ ] rotate refresh token
+
     [ ] JwtStrategy
     [ ] JwtAuthGuard logic to rely on strategy + session validation
     [ ] Logout
-        
-    [ ] Refresh
-        [x] refresh token
-        [ ] refresh rotation
+
     [ ] Create organization
     [ ] Membership
     [ ] Invite
@@ -39,9 +51,6 @@
 ## User module
 
     [x] create user
-        [x] create user record
-        [x] send email link
-        [x] verify email
     [ ] update user
 
 ## Mail module
@@ -50,13 +59,10 @@
     [x] mail processor
 
 ## Session module
+
     [x] create session
     [x] revoke
-    
-## Redis module
-    [ ] create Redis session
-    [ ] Redis session reload in case of server reload
-    
+
 ## Common
 
     [x] password module/service
