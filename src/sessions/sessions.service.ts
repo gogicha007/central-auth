@@ -43,7 +43,7 @@ export class SessionsService {
           where: {
             userId,
             revokedAt: null,
-            expoiresAt: { gt: now },
+            expiresAt: { gt: now },
             idleExpiresAt: { gt: now },
           },
           select: { id: true },
@@ -53,7 +53,7 @@ export class SessionsService {
             where: { id: activeSession.id },
             data: {
               revokedAt: now,
-              revodedReason: 'replaced',
+              revokedReason: 'replaced',
             },
           });
         }
