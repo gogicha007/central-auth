@@ -107,4 +107,24 @@ export class SessionsService {
 
     return revokedSession;
   }
+
+  async getActiveSessions() {
+    const now = new Date();
+    const activeSessions = await this.dbService.session.findMany({
+      where: {
+        revokedAt: null,
+        expiresAt: { gt: now },
+        idleExpiresAt: { gt: now },
+      },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        idleExpiresAt: true,
+        revokedAt: true,
+        refreshVersion: true,
+      },
+    });
+    return activeSessions;
+  }
 }

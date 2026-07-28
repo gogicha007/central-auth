@@ -6,7 +6,7 @@
 
     [x] Redis module
     [x] Redis service(get, set, delete)
-    [ ] Redis session reload in case of server reload
+    [x] Redis session reload in case of server reload(getActiveSEssions, SessionCacheWarmupService)
 
 ## Logging service
 
