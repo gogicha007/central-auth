@@ -56,7 +56,7 @@ export class AuthController {
   @Post('logout')
   logout(@Req() req: Request) {
     const user = req.user
-    console.log(user)
+    console.log('logout controller hit, user',user)
     return this.authService.logout();
   }
 

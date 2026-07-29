@@ -64,9 +64,20 @@ Login:
 
 ## Authorization
 
-Nest js guards:
+AuthGuards based on strategies using Passport library
+- local strategy: check username and password
+- jwt strategy: 
+    - check JWT signature + expiry (done by Passport)
+    - Validate sessions:
+        - load redis session first (auth-session-cache.util.ts)
+        - load DB session
+        - check active/revoked/idle expiry (session-helper.ts)
 
-JwtAuthGuard -> OrganizationGuard -> RolesGuard -> PermissionsbGuard
+Other guards:
+
+- OrganizationGuard
+RolesGuard
+PermissionsbGuard
 
 ## Resopnse
 
