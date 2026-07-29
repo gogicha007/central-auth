@@ -52,12 +52,15 @@ Login:
     2. Create session
         - set session absolute expiration time (30 days)
         - set session idle expiration time (72 hours)
-        - Postgres Session record
+        - Postgres 
+            - check if active session of the user exists and update(revoke)
+            - create new Session record
         - redis session&redis sessions reload
 
     3. Issue Access token & Refresh token
         - set access token secret&ttl and create
         - set refresh token secret&ttl and create
+
 
 ## Authorization
 

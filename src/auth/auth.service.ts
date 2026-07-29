@@ -25,8 +25,8 @@ export class AuthService {
     private readonly sessionsService: SessionsService,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
-    private readonly redisService: RedisService
-  ) { }
+    private readonly redisService: RedisService,
+  ) {}
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -62,7 +62,7 @@ export class AuthService {
       getJwtOptions(
         this.configService,
         'JWT_ACCESS_TOKEN_SECRET',
-        `${this.configService.getOrThrow<string>('JWT_TTL_M')}m`,
+        `${this.configService.getOrThrow<string>('JWT_TTL_M')}`,
       ),
     );
 
@@ -76,7 +76,7 @@ export class AuthService {
       getJwtOptions(
         this.configService,
         'JWT_REFRESH_TOKEN_SECRET',
-        `${this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D')}d`,
+        `${this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D')}`,
       ),
     );
 

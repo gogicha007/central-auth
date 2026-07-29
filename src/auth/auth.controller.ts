@@ -37,7 +37,6 @@ export class AuthController {
       typeof req.headers['user-agent'] === 'string'
         ? req.headers['user-agent']
         : undefined;
-
     return this.authService.login(user, ip, userAgent);
   }
 
