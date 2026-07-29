@@ -31,8 +31,8 @@
         [x] check Postgres revocation
         [x] rotate refresh token
 
-    [x] JwtStrategy
-    [ ] JwtAuthGuard logic to rely on strategy + session validation
+    [x] JwtStrategy (validate jwt signature + session)
+    [x] JwtAuthGuard
     [ ] Logout
 
     [ ] Create organization

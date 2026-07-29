@@ -18,7 +18,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -45,18 +45,18 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('refresh')
   refresh(@Body('refreshToken') refreshToken: string) {
     return this.authService.refresh(refreshToken);
   }
 
   //TODO: POST logout
-  // @UseGuards(LocalAuthGuard)
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   logout(@Req() req: Request) {
-    const user = req.user
-    console.log('logout controller hit, user',user)
+    const user = req.user;
+    console.log('logout controller hit, user', user);
     return this.authService.logout();
   }
 

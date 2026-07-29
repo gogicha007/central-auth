@@ -69,15 +69,14 @@ AuthGuards based on strategies using Passport library
 - jwt strategy: 
     - check JWT signature + expiry (done by Passport)
     - Validate sessions:
-        - load redis session first (auth-session-cache.util.ts)
-        - load DB session
-        - check active/revoked/idle expiry (session-helper.ts)
+        - load redis session 
+        - check active/revoked/idle expiry
 
 Other guards:
 
 - OrganizationGuard
-RolesGuard
-PermissionsbGuard
+- RolesGuard
+- PermissionsbGuard
 
 ## Resopnse
 
