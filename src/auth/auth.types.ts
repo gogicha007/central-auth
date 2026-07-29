@@ -15,3 +15,9 @@ export type UserContext = {
   email: string;
   status: UserStatus;
 };
+
+export type AuthenticatedUserContext = {
+  id: string;
+  email: string;
+  sessionId: string
+}
