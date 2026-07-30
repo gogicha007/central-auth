@@ -8,6 +8,7 @@ import {
   Req,
   UseGuards,
   Param,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signUp.dto';
@@ -57,23 +58,27 @@ export class AuthController {
   logout(@Req() req: Request) {
     const user = req.user as AuthenticatedUserContext;
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new UnauthorizedException('User not authenticated');
     }
     return this.authService.logout(user);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('sessions/:id/revoke')
-  sessionRevoke(@Param('id') id: string) {
-    return this.authService.sessionRevoke(id);
+  sessionRevoke(@Req() req: Request, @Param('id') id: string) {
+    const user = req.user as AuthenticatedUserContext;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    return this.authService.sessionRevoke(user.id, id);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get('sessions/byuser')
-  sessions(@Req() req: Request) {
+  @Get('sessions')
+  getUserSessions(@Req() req: Request) {
     const user = req.user as AuthenticatedUserContext;
-    if(!user){
-      throw new Error('User not authanticated')
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
     }
     return this.authService.getUserActiveSessions(user.id);
   }

@@ -162,17 +162,23 @@ export class AuthService {
     return ok('user logged out successfully');
   }
 
-  async sessionRevoke(sessionId: string) {
+  async sessionRevoke(userId: string, sessionId: string) {
+    const session = await this.sessionsService.getSession(sessionId);
+
+    if (!session || session.userId !== userId) {
+      throw new UnauthorizedException('Session not found');
+    }
+
     await this.sessionsService.revokeSession(sessionId, 'revoke');
     await this.redisService.delete(getSessionCacheKey(sessionId));
     return ok('session revoked successfully');
   }
 
-  getSession() {
+  getSessions() {
     return this.sessionsService.getActiveSessions()
   }
 
   getUserActiveSessions(userId: string) {
-    return this.sessionsService.getUsersActiveSessions(userId)
+    return this.sessionsService.getUserActiveSessions(userId);
   }
 }

@@ -36,12 +36,11 @@
         [x] check Postgres revocation
         [x] rotate refresh token
 
-    [ ] Sessions/:id/revoke
-        
+    [x] get sessions by user id
+    [x] Sessions/:id/revoke
 
     [x] JwtStrategy (validate jwt signature + session)
     [x] JwtAuthGuard
-    [ ] Logout
 
     [ ] Create organization
     [ ] Membership

@@ -128,14 +128,14 @@ export class SessionsService {
     return activeSessions;
   }
 
-  async getUsersActiveSessions(userId: string) {
-    const now = new Date()
+  async getUserActiveSessions(userId: string) {
+    const now = new Date();
     const activeUserSessions = await this.dbService.session.findMany({
       where: {
         userId,
         revokedAt: null,
         expiresAt: { gt: now },
-        idleExpiresAt: { gt: now }
+        idleExpiresAt: { gt: now },
       },
       select: {
         id: true,
@@ -143,10 +143,10 @@ export class SessionsService {
         expiresAt: true,
         idleExpiresAt: true,
         revokedAt: true,
-        refreshVersion: true
-      }
-    })
-    return activeUserSessions
+        refreshVersion: true,
+      },
+    });
+    return activeUserSessions;
   }
 
   async cleanupRevokedSessions(retentionDays: number) {
