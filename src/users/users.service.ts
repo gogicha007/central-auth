@@ -230,6 +230,7 @@ export class UsersService {
       id: user.id,
       email: user.email,
       status: user.status,
+      isPlatformAdmin: user.isPlatformAdmin,
     };
   }
 }

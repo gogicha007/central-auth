@@ -1,7 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
+import { RoleNames } from '@prisma/client';
 
-export const REQUIRED_ROLE_KEY = 'requiredRole';
+export const ROLE_KEY = 'role';
 
-export const isSuperAdmin = () => SetMetadata(REQUIRED_ROLE_KEY, 'SuperAdmin');
-
-export const IsManager = () => SetMetadata(REQUIRED_ROLE_KEY, 'manager');
+export const Roles = (...role: RoleNames[]) => SetMetadata(ROLE_KEY, role);

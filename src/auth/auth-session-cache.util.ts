@@ -27,6 +27,7 @@ type JwtConfigReader = {
 type TokenUser = {
   id: string;
   email: string;
+  isPlatformAdmin: boolean;
 };
 
 type RedisCacheStore = {
@@ -57,6 +58,7 @@ export function createTokenPayload(
     sub: user.id,
     sid: sessionId,
     email: user.email,
+    isPlatformAdmin: user.isPlatformAdmin,
   };
 }
 
