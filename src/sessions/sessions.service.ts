@@ -127,4 +127,24 @@ export class SessionsService {
     });
     return activeSessions;
   }
+
+  async cleanupRevokedSessions(retentionDays: number) {
+    if (!Number.isFinite(retentionDays) || retentionDays < 1) {
+      throw new Error('retentionDays must be a positive integer');
+    }
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - Math.floor(retentionDays));
+
+    const result = await this.dbService.session.deleteMany({
+      where: {
+        revokedAt: {
+          not: null,
+          lt: cutoff,
+        },
+      },
+    });
+
+    return result.count;
+  }
 }

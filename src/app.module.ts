@@ -14,6 +14,7 @@ import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
 import { BullModule } from '@nestjs/bullmq';
 import { SessionsModule } from './sessions/sessions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SessionsModule } from './sessions/sessions.module';
         },
       ],
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     RedisModule,
     LoggingModule,
