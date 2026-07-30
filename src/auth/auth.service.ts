@@ -7,15 +7,17 @@ import { PasswordService } from '../common/password/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../sessions/sessions.service';
-import { JwtPayload } from './auth.types';
+import { AuthenticatedUserContext, JwtPayload } from './auth.types';
 import { RedisService } from '../redis/redis.service';
 import { isSessionActive } from '../common/utils/session-helper';
 import {
   cacheSession,
   createTokenPayload,
+  getSessionCacheKey,
   getSessionForAuth,
   getJwtOptions,
 } from './auth-session-cache.util';
+import { ok } from '../common/utils/api-response.util';
 
 @Injectable()
 export class AuthService {
@@ -154,7 +156,9 @@ export class AuthService {
     return this.userService.verifyEmailByToken(token);
   }
 
-  logout() {
-    return `logout hit`;
+  async logout(user: AuthenticatedUserContext) {
+    await this.sessionsService.revokeSession(user.sessionId, 'logout');
+    await this.redisService.delete(getSessionCacheKey(user.sessionId));
+    return ok('user logged out successfully');
   }
 }

@@ -12,13 +12,13 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signUp.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { UserContext } from './auth.types';
+import type { AuthenticatedUserContext, UserContext } from './auth.types';
 import type { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -55,9 +55,11 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   logout(@Req() req: Request) {
-    const user = req.user;
-    console.log('logout controller hit, user', user);
-    return this.authService.logout();
+    const user = req.user as AuthenticatedUserContext;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    return this.authService.logout(user);
   }
 
   //TODO: POST sessions/:id/revoke

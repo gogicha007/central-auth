@@ -25,6 +25,11 @@
         [x] Issue access token
         [x] Issue refresh token
 
+    [x] Logout endpoint
+        [x] validate jwt & sessions(DB&redis)
+        [x] revoke db session and delete redis record
+        [ ] audit log for logout action
+        
     [x] Refresh endpoint
         [x] verify token
         [x] check redis session
