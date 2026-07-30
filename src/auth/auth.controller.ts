@@ -7,6 +7,7 @@ import {
   Query,
   Req,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signUp.dto';
@@ -61,16 +62,20 @@ export class AuthController {
     return this.authService.logout(user);
   }
 
-  //TODO: POST sessions/:id/revoke
+  @UseGuards(AuthGuard('jwt'))
   @Post('sessions/:id/revoke')
-  sessinsRevoke() {
-    return 'sessions revoke';
+  sessionRevoke(@Param('id') id: string) {
+    return this.authService.sessionRevoke(id);
   }
 
-  //TODO: GET sessions
-  @Get('sessions')
-  sessions() {
-    return 'sessions';
+  @UseGuards(AuthGuard('jwt'))
+  @Get('sessions/byuser')
+  sessions(@Req() req: Request) {
+    const user = req.user as AuthenticatedUserContext;
+    if(!user){
+      throw new Error('User not authanticated')
+    }
+    return this.authService.getUserActiveSessions(user.id);
   }
 
   //TODO: POST organizations

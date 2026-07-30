@@ -92,3 +92,6 @@ in case of error:
 statusCode: number,
 message: string
 }
+
+## Sessions
+

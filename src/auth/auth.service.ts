@@ -28,7 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -160,5 +160,19 @@ export class AuthService {
     await this.sessionsService.revokeSession(user.sessionId, 'logout');
     await this.redisService.delete(getSessionCacheKey(user.sessionId));
     return ok('user logged out successfully');
+  }
+
+  async sessionRevoke(sessionId: string) {
+    await this.sessionsService.revokeSession(sessionId, 'revoke');
+    await this.redisService.delete(getSessionCacheKey(sessionId));
+    return ok('session revoked successfully');
+  }
+
+  getSession() {
+    return this.sessionsService.getActiveSessions()
+  }
+
+  getUserActiveSessions(userId: string) {
+    return this.sessionsService.getUsersActiveSessions(userId)
   }
 }
