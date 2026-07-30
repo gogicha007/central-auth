@@ -36,8 +36,10 @@
         [x] check Postgres revocation
         [x] rotate refresh token
 
-    [x] get sessions by user id
-    [x] Sessions/:id/revoke
+    [x] sessions endpoint
+        - get sessions by user id
+    [x] sessions/:id/revoke endpoint
+        - revoke session (redis&DB) by sessionId
 
     [x] JwtStrategy (validate jwt signature + session)
     [x] JwtAuthGuard
