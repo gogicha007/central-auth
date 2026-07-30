@@ -157,6 +157,7 @@ export class UsersService {
         id: true,
         email: true,
         status: true,
+        isPlatformAdmin: true,
       },
     });
   }
@@ -169,6 +170,7 @@ export class UsersService {
         email: true,
         status: true,
         passwordHash: true,
+        isPlatformAdmin: true,
       },
     });
 

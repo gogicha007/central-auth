@@ -8,6 +8,7 @@ export interface JwtPayload {
   version?: number;
   iat?: number; // issued at
   exp?: number; // expiration
+  isPlatformAdmin: boolean;
 }
 
 export type UserContext = {
@@ -19,5 +20,6 @@ export type UserContext = {
 export type AuthenticatedUserContext = {
   id: string;
   email: string;
-  sessionId: string
-}
+  sessionId: string;
+  isPlatformAdmin: boolean;
+};

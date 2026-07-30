@@ -4,6 +4,8 @@ This is an IAM platform with multi-tenant support.
 
 As the user can be member of different organization inside the system, after sign-up is invited to organization.
 
+The same role name can have different permissions for the different organization
+
 Users sign-up, create an organization, invite users, assign roles, manage permissions, and track sensitive actions through audit logs.
 
 Auth pattern - Session-bound JWT:

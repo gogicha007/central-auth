@@ -29,6 +29,7 @@ model User {
   status              UserStatus           @default(PENDING)
   emailVerified       Boolean              @default(false) @map("email_verified")
   emailVerifiedAt     DateTime?
+  isPlatformAdmin     Boolean              @default(false) @map("is_platform_admin") // true if owner/developer
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   lastLoginAt         DateTime?            @map("last_login_at")
@@ -80,7 +81,6 @@ model OrganizationMember {
 }
 
 enum RoleNames {
-  SUPERADMIN
   ADMIN
   MANAGER
   DIRECTOR
@@ -145,7 +145,7 @@ model Session {
   userAgent      String?   @map("user_agent") // browser/mobile/
   lastActivity   DateTime  @map("last_activity")
   expiresAt      DateTime  @map("expires_at") // SESSION ABSOLUTE
-  idleExpiresAt  DateTime  @map("idle_expires_at")  // SESSION IDLE
+  idleExpiresAt  DateTime  @map("idle_expires_at") // SESSION IDLE
   revokedAt      DateTime? @map("revoked_at")
   revokedReason  String?   @map("revoked_reason")
   refreshVersion Int       @default(0) @map("refresh_version")

@@ -8,8 +8,6 @@
     [x] Redis service(get, set, delete)
     [x] Redis session reload in case of server reload(getActiveSEssions, SessionCacheWarmupService)
 
-## Logging service
-
 ## Auth module
 
     [x] Sign-up endpoint
@@ -24,6 +22,7 @@
         [x] Create Redis session entry keyed by session id
         [x] Issue access token
         [x] Issue refresh token
+        [ ] audit log
 
     [x] Logout endpoint
         [x] validate jwt & sessions(DB&redis)
@@ -31,23 +30,29 @@
         [ ] audit log for logout action
 
     [x] Refresh endpoint
+        [x] validate jwt & sessions
         [x] verify token
         [x] check redis session
         [x] check Postgres revocation
         [x] rotate refresh token
 
+    Sessions:
     [x] sessions endpoint
-        - get sessions by user id
+        [x] validate jwt & session
+        [x] get active sessions by user id
+        
     [x] sessions/:id/revoke endpoint
-        - revoke session (redis&DB) by sessionId
+        [x] validate jwt & session
+        [x] revoke session (redis&DB) by sessionId
+    
 
-    [x] JwtStrategy (validate jwt signature + session)
-    [x] JwtAuthGuard
+    [ ] Organization endpoint
+        - create organization
+        - create default org roles
+        - attach creator as admin membership
 
-    [ ] Create organization
     [ ] Membership
     [ ] Invite
-    [ ] Auth guard
     [ ] roles
         [ ] public(@Public decorator)
         [ ] superAdmin(@isSuperAdmin decorator)
@@ -57,10 +62,16 @@
     [x] middleware(logging service)
     [x] exception filters
 
+    AuthGuards
+    [x] local strategy (validate email&password)
+    [x] JwtStrategy (validate jwt signature + session)
+    [x] JwtAuthGuard
+
 ## User module
 
     [x] create user
     [ ] update user
+    [ ] password change/reset
 
 ## Mail module
 
