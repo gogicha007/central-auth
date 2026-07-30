@@ -36,7 +36,7 @@
         [x] check Postgres revocation
         [x] rotate refresh token
 
-    [ ] 
+    [ ]
     [x] JwtStrategy (validate jwt signature + session)
     [x] JwtAuthGuard
     [ ] Logout
@@ -68,6 +68,7 @@
 
     [x] create session
     [x] revoke
+    [x] session-cleanup for revoked sessions (30 days(.env) retention)
 
 ## Common
 
