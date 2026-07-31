@@ -36,15 +36,20 @@
         [x] check Postgres revocation
         [x] rotate refresh token
 
-    Sessions:
     [x] sessions endpoint
         [x] validate jwt & session
         [x] get active sessions by user id
-        
+
     [x] sessions/:id/revoke endpoint
         [x] validate jwt & session
         [x] revoke session (redis&DB) by sessionId
-    
+
+    AuthGuards
+    [x] local strategy (validate email&password)
+    [x] JwtStrategy (validate jwt signature + session)
+    [x] JwtAuthGuard
+
+## Organizatoins module
 
     [ ] Organization endpoint
         - create organization
@@ -54,18 +59,12 @@
     [ ] Membership
     [ ] Invite
     [ ] roles
-        [ ] public(@Public decorator)
-        [ ] superAdmin(@isSuperAdmin decorator)
-        [ ] admin(@IsAdmin decorator)
-        [ ] manager(@IsManager decorator)
+
+## Common
+
     [x] logging service
     [x] middleware(logging service)
     [x] exception filters
-
-    AuthGuards
-    [x] local strategy (validate email&password)
-    [x] JwtStrategy (validate jwt signature + session)
-    [x] JwtAuthGuard
 
 ## User module
 

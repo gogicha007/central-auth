@@ -97,3 +97,45 @@ message: string
 
 ## Sessions
 
+## Organizations
+Authorization matrix
+- Create organization:
+   - authenticated user
+   - platform admin
+
+- View own organization:
+    - any active member of that organization
+    - platform admin
+
+-	Update organization profile:
+    - OWNER, ADMIN
+    - platform admin
+
+-	Invite member:
+    - OWNER, ADMIN
+    - platform admin
+
+-	Accept invitation:
+    - invited user with valid token
+    - no org role required yet
+    - authenticated flow
+
+-	Change member role:
+    - OWNER
+    - ADMIN only for lower roles
+    - platform admin
+
+-	Remove member:
+    - OWNER
+    - ADMIN for non-owner members
+    - platform admin
+
+-	Delete organization:
+    - OWNER
+    - platform admin
+
+-	Transfer ownership:
+    - OWNER
+    - platform admin
+
+

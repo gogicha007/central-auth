@@ -81,6 +81,7 @@ model OrganizationMember {
 }
 
 enum RoleNames {
+  OWNER
   ADMIN
   MANAGER
   DIRECTOR
