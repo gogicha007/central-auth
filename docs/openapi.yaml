@@ -176,6 +176,8 @@ paths:
   /auth/login:
     post:
       summary: Login user
+      security:
+        - bearerToken: []
       operationId: login
       requestBody:
         required: true
@@ -218,13 +220,51 @@ paths:
                   expiresIn:
                     type: number
                     example: 900
-  
+
   /auth/refresh:
     post:
       summary: refresh token
       security:
         - bearerToken: []
-  
+      operationId: refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  format: token
+      responses:
+        '200':
+          description: refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                  - tokenType
+                  - expiresIn
+                properties:
+                  accessToken:
+                    type: string
+                    example: E3ODQ3MTYxMjksImV4cCI6MTc4NDcxNzAyOX0...
+                  refreshToken:
+                    type: string
+                    example: 9uIjowLCJpYXQiOjE3ODQ3MTYxMjksImV4cCI6MTc4NzMwODEyOX0...
+                  tokenType:
+                    type: string
+                    example: bearer
+                  expiresIn:
+                    type: number
+                    example: 900F
+
   /auth/logout:
     post:
       summary: logout user
@@ -252,34 +292,37 @@ paths:
                     type: object
                     nullable: true
                     example: null
+
   /auth/sessions/:id/revoke:
     post:
       summary: revoke token
       security:
         - bearerToken: []
+
   /auth/sessions:
     get:
       summary: get sessions
       security:
         - bearerToken: []
-  
+
   organizations:
     post:
       summary: create organization
       security:
         - bearerToken: []
-  
+
   organizations/:id/invitations:
     post:
       summary: invite user to organization
       security:
         - bearerToken: []
-  
+
   /invitations/accept:
     post:
       summary: accept invitation
       security:
         - bearerToken: []
+
   /organizations/:id/members/role:
     patch:
       summary: assign role to user
