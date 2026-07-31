@@ -54,7 +54,7 @@ Login:
     2. Create session
         - set session absolute expiration time (30 days)
         - set session idle expiration time (72 hours)
-        - Postgres 
+        - Postgres
             - check if active session of the user exists and update(revoke)
             - create new Session record
         - redis session&redis sessions reload
@@ -63,16 +63,16 @@ Login:
         - set access token secret&ttl and create
         - set refresh token secret&ttl and create
 
-
 ## Authorization
 
 AuthGuards based on strategies using Passport library
+
 - local strategy: check username and password
-- jwt strategy: 
-    - check JWT signature + expiry (done by Passport)
-    - Validate sessions:
-        - load redis session 
-        - check active/revoked/idle expiry
+- jwt strategy:
+  - check JWT signature + expiry (done by Passport)
+  - Validate sessions:
+    - load redis session
+    - check active/revoked/idle expiry
 
 Other guards:
 
@@ -98,44 +98,63 @@ message: string
 ## Sessions
 
 ## Organizations
+
 Authorization matrix
+
 - Create organization:
-   - authenticated user
-   - platform admin
+  - authenticated user
+  - platform admin
 
 - View own organization:
-    - any active member of that organization
-    - platform admin
+  - any active member of that organization
+  - platform admin
 
--	Update organization profile:
-    - OWNER, ADMIN
-    - platform admin
+- Update organization profile:
+  - OWNER, ADMIN
+  - platform admin
 
--	Invite member:
-    - OWNER, ADMIN
-    - platform admin
+- Invite member:
+  - OWNER, ADMIN
+  - platform admin
 
--	Accept invitation:
-    - invited user with valid token
-    - no org role required yet
-    - authenticated flow
+- Accept invitation:
+  - invited user with valid token
+  - no org role required yet
+  - authenticated flow
 
--	Change member role:
-    - OWNER
-    - ADMIN only for lower roles
-    - platform admin
+- Change member role:
+  - OWNER
+  - ADMIN only for lower roles
+  - platform admin
 
--	Remove member:
-    - OWNER
-    - ADMIN for non-owner members
-    - platform admin
+- Remove member:
+  - OWNER
+  - ADMIN for non-owner members
+  - platform admin
 
--	Delete organization:
-    - OWNER
-    - platform admin
+- Delete organization:
+  - OWNER
+  - platform admin
 
--	Transfer ownership:
-    - OWNER
-    - platform admin
+- Transfer ownership:
+  - OWNER
+  - platform admin
 
+Delegation rules
 
+- OWNER
+  - can assign ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - can transfer ownership
+  - can delete org
+
+- ADMIN
+  - can assign MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - cannot assign OWNER
+  - cannot remove current OWNER
+
+- MANAGER
+  - can invite EMPLOYEE and VIEWER
+  - cannot assign ADMIN
+  
+- DIRECTOR, EMPLOYEE, VIEWER
+  - no membership-management authority by default
