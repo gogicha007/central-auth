@@ -6,7 +6,7 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService) { }
 
   async create(createOrganizationDto: CreateOrganizationDto, creatorUserId: string) {
     try {
@@ -15,6 +15,7 @@ export class OrganizationsService {
           data: {
             name: createOrganizationDto.name,
             slug: createOrganizationDto.slug,
+            taxNo: createOrganizationDto.taxNo
           },
         });
 

@@ -6,4 +6,7 @@ export class CreateOrganizationDto {
 
     @IsString({ message: 'Organization slug to be string' })
     slug!: string
+
+    @IsString()
+    taxNo!: string
 }
