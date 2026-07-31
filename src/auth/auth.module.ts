@@ -9,10 +9,12 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionsModule } from '../sessions/sessions.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RedisModule } from '../redis/redis.module';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [PasswordModule, PassportModule, RedisModule, SessionsModule, UsersModule,],
-  providers: [AuthService, LocalStrategy, JwtStrategy, JwtService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, JwtService, JwtAuthGuard],
   controllers: [AuthController],
+  exports: [JwtAuthGuard]
 })
 export class AuthModule { }
