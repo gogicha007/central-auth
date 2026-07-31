@@ -51,10 +51,10 @@
 
 ## Organizatoins module
 
-    [ ] Organization endpoint
-        - create organization
-        - create default org roles
-        - attach creator as admin membership
+    create organization
+        [x] create organization
+        [x] create role(OWNER)
+        [x] create organization member
 
     [ ] Membership
     [ ] Invite

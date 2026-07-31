@@ -47,7 +47,7 @@ model Organization {
   id                  String               @id @default(ulid())
   name                String               @unique
   slug                String               @unique // slug name of the company
-  taxNo               String?              @unique @map("tax_number")
+  taxNo               String               @unique @map("tax_number")
   address             String?
   createdAt           DateTime             @default(now()) @map("created_at")
   roles               Role[]
