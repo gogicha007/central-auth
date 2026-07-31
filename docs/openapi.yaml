@@ -195,7 +195,7 @@ paths:
                   format: password
       responses:
         '200':
-          description: logint user
+          description: login user
           content:
             application/json:
               schema:
@@ -206,7 +206,7 @@ paths:
                   - tokenType
                   - expiresIn
                 properties:
-                  acceptToken:
+                  accessToken:
                     type: string
                     example: E3ODQ3MTYxMjksImV4cCI6MTc4NDcxNzAyOX0...
                   refreshToken:
@@ -218,31 +218,73 @@ paths:
                   expiresIn:
                     type: number
                     example: 900
-
+  
   /auth/refresh:
     post:
       summary: refresh token
+      security:
+        - bearerToken: []
+  
   /auth/logout:
     post:
       summary: logout user
+      security:
+        - bearerToken: []
+      responses:
+        '200':
+          description: logout user
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: user logged out successfully
+                  data:
+                    type: object
+                    nullable: true
+                    example: null
   /auth/sessions/:id/revoke:
     post:
       summary: revoke token
+      security:
+        - bearerToken: []
   /auth/sessions:
     get:
       summary: get sessions
-  /auth/organizations:
+      security:
+        - bearerToken: []
+  
+  organizations:
     post:
       summary: create organization
-  /auth/organizations/:id/invitations:
+      security:
+        - bearerToken: []
+  
+  organizations/:id/invitations:
     post:
       summary: invite user to organization
-  /auth/invitations/accept:
+      security:
+        - bearerToken: []
+  
+  /invitations/accept:
     post:
       summary: accept invitation
-  /auth/organizations/:id/members/role:
+      security:
+        - bearerToken: []
+  /organizations/:id/members/role:
     patch:
       summary: assign role to user
+      security:
+        - bearerToken: []
 
 components:
   schemas:
@@ -270,6 +312,10 @@ components:
       type: object
     AuditLog:
       type: object
-
-  Errorresponse:
-    type: object
+    ErrorResponse:
+      type: object
+  securitySchemes:
+    bearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
