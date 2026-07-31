@@ -293,7 +293,7 @@ paths:
                     nullable: true
                     example: null
 
-  /auth/sessions/:id/revoke:
+  /auth/sessions/{id}/revoke:
     post:
       summary: revoke token
       security:
@@ -425,7 +425,7 @@ paths:
       security:
         - bearerToken: []
 
-  organizations/:id/invitations:
+  /organizations/{id}/invitations:
     post:
       summary: invite user to organization
       security:
@@ -437,7 +437,7 @@ paths:
       security:
         - bearerToken: []
 
-  /organizations/:id/members/role:
+  /organizations/{id}/members/role:
     patch:
       summary: assign role to user
       security:
