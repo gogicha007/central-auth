@@ -15,6 +15,7 @@ import { MailModule } from './mail/mail.module';
 import { BullModule } from '@nestjs/bullmq';
 import { SessionsModule } from './sessions/sessions.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OrganizationsModule } from './organizations/organizations.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     UsersModule,
     MailModule,
     SessionsModule,
+    OrganizationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

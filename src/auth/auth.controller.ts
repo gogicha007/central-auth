@@ -83,27 +83,6 @@ export class AuthController {
     return this.authService.getUserActiveSessions(user.id);
   }
 
-  //TODO: organizations
-  @Post('organizations')
-  orgainzations() {
-    return 'organization';
-  }
-
-  @Post('organizations/:id/invitations')
-  orgInvitacions() {
-    return 'organization invitations';
-  }
-
-  @Post('invitations/accept')
-  invitacionAccept() {
-    return 'invitation accept';
-  }
-
-  @Patch('organizations/:id/members/:memberId/role')
-  membershipRoles() {
-    return 'membership roles';
-  }
-
   @Get()
   health() {
     return 'get outh requested';
