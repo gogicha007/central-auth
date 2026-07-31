@@ -3,6 +3,8 @@ import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUserContext } from '../auth/auth.types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
@@ -10,8 +12,11 @@ export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
-  create(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return this.organizationsService.create(createOrganizationDto);
+  create(
+    @Body() createOrganizationDto: CreateOrganizationDto,
+    @CurrentUser() user: AuthenticatedUserContext,
+  ) {
+    return this.organizationsService.create(createOrganizationDto, user.id);
   }
 
   @Get()

@@ -1,11 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { MemberStatus, RoleNames } from '@prisma/client';
+import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
-  create(createOrganizationDto: CreateOrganizationDto) {
-    return 'This action adds a new organization';
+  constructor(private readonly db: DatabaseService) {}
+
+  async create(createOrganizationDto: CreateOrganizationDto, creatorUserId: string) {
+    try {
+      return await this.db.$transaction(async (tx) => {
+        const organization = await tx.organization.create({
+          data: {
+            name: createOrganizationDto.name,
+            slug: createOrganizationDto.slug,
+          },
+        });
+
+        const ownerRole = await tx.role.create({
+          data: {
+            organizationId: organization.id,
+            name: RoleNames.OWNER,
+            description: 'Organization owner with full control',
+            isSystem: true,
+          },
+        });
+
+        await tx.organizationMember.create({
+          data: {
+            organizationId: organization.id,
+            userId: creatorUserId,
+            roleId: ownerRole.id,
+            status: MemberStatus.ACTIVE,
+          },
+        });
+
+        return organization;
+      });
+    } catch {
+      throw new ConflictException('Organization name or slug already exists');
+    }
   }
 
   findAll() {
