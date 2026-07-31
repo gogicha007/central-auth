@@ -516,18 +516,177 @@ paths:
       summary: invite user to organization
       security:
         - bearerToken: []
+      operationId: inviteOrganizationMember
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: member@acme.com
+                role:
+                  type: string
+                  enum: [OWNER, ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER]
+                  example: EMPLOYEE
+                expiresAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: 2026-08-31T23:59:59Z
+      responses:
+        '201':
+          description: invitation created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - organizationId
+                  - email
+                  - roleId
+                  - token
+                  - expiresAt
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  organizationId:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  roleId:
+                    type: string
+                  token:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  acceptedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to invite members
+        '404':
+          description: Organization or role not found
+        '409':
+          description: Invitation already exists for this email
 
-  /invitations/accept:
+  /organizations/invitations/accept:
     post:
       summary: accept invitation
       security:
         - bearerToken: []
+      operationId: acceptOrganizationInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  example: 7787f2b5-b711-4fb9-8abf-2f813b7b80b3
+      responses:
+        '200':
+          description: invitation accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: invitation accepted
+        '400':
+          description: Invalid, expired, or already used invitation token
+        '401':
+          description: User not authenticated
+        '404':
+          description: Invitation not found
 
-  /organizations/{id}/members/role:
+  /organizations/{id}/members/{memberId}/role:
     patch:
       summary: assign role to user
       security:
         - bearerToken: []
+      operationId: assignOrganizationMemberRole
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+        - in: path
+          name: memberId
+          required: true
+          description: Organization member ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [OWNER, ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER]
+                  example: MANAGER
+      responses:
+        '200':
+          description: member role updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: member role updated
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to assign roles
+        '404':
+          description: Organization, member, or role not found
 
 components:
   schemas:
