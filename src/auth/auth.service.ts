@@ -28,7 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -182,7 +182,7 @@ export class AuthService {
     return this.sessionsService.getUserActiveSessions(userId);
   }
 
-  forgotPassword(email: string) {
-    console.log('auth.service forgotPass, email', email);
+  async forgotPassword(email: string) {
+    return await this.userService.forgotPassword(email);
   }
 }

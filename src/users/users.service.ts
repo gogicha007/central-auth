@@ -14,6 +14,7 @@ import { ok } from '../common/utils/api-response.util';
 import { LoginDto } from '../auth/dto/login.dto';
 import { PasswordService } from '../common/password/password.service';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
+import { blockedStatuses } from './constants';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +22,7 @@ export class UsersService {
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
-  ) {}
+  ) { }
 
   async create(payload: CreateUserDto) {
     const existingUser = await this.dbService.user.findUnique({
@@ -176,14 +177,6 @@ export class UsersService {
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const blockedStatuses: UserStatus[] = [
-      UserStatus.DEACTIVATED,
-      UserStatus.DELETED,
-      UserStatus.LOCKED,
-      UserStatus.PENDING,
-      UserStatus.SUSPENDED,
-    ];
-
     if (blockedStatuses.includes(user.status)) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -232,5 +225,43 @@ export class UsersService {
       status: user.status,
       isPlatformAdmin: user.isPlatformAdmin,
     };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.dbService.user.findUnique({
+      where: {
+        email
+      },
+      select: {
+        id: true,
+        email: true,
+        status: true,
+      }
+    })
+
+    if (!user || blockedStatuses.includes(user.status)) return ok('If an account exists with that email, a password reset link has been sent.')
+
+    const resetToken = crypto.randomBytes(32).toString('hex')
+
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex')
+
+    await this.dbService.userToken.create({
+      data: {
+        userId: user.id,
+        type: TokenType.PASSWORD_RESET,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        usedAt: null
+      }
+    })
+
+    await this.mailService.sentPasswordResetEmail(email, resetToken)
+
+    //TODO: audit log
+
+    return ok('If an account exists with that email, a password reset link has been sent.')
   }
 }

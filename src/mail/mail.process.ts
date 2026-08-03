@@ -48,5 +48,28 @@ export class MailProcessor extends WorkerHost {
         throw error;
       }
     }
+
+    if (job.name === 'sent-password-reset') {
+      const { to, link } = job.data;
+
+      this.logger.log(`Processing password reset email to ${to}`)
+
+      try {
+        await this.transporter.sendMail({
+          from: `"Central Auth" <no-reply@centralapp.com`,
+          to,
+          subject: 'Reset password',
+          html: `<p>Please click here <a href="${link}"> to reset the password</a>.</p>`,
+        });
+
+        this.logger.log(`Email successfully sent to ${to}`);
+      } catch (error: unknown) {
+        this.logger.error(
+          `Failed to send email to ${to}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+        throw error;
+      }
+    }
   }
 }

@@ -92,7 +92,7 @@ export class AuthController {
     emailStrict: { limit: 3, ttl: 900000 },
   })
   passwordForgot(@Body() data: ForgotPasswordDto) {
-    this.authService.forgotPassword(data.email);
+    return this.authService.forgotPassword(data.email);
   }
 
   @Post('password/reset')
