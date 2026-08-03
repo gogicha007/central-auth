@@ -71,8 +71,11 @@
     [ ] Membership
 
     [ ] Invite member
+        [ ] create invitation
+        [ ] send invitation email to user
 
     [ ] roles
+        [ ] create role
 
 ## Common
 

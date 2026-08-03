@@ -16,6 +16,9 @@ import { BullModule } from '@nestjs/bullmq';
 import { SessionsModule } from './sessions/sessions.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { AuditModule } from './audit/audit.module';
+import { InvitationsModule } from './invitations/invitations.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -58,6 +61,9 @@ import { OrganizationsModule } from './organizations/organizations.module';
     MailModule,
     SessionsModule,
     OrganizationsModule,
+    AuditModule,
+    InvitationsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

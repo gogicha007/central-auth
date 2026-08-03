@@ -3,10 +3,15 @@ import { MemberStatus, RoleNames } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { InvitationsService } from '../invitations/invitations.service';
+import { SendInvitaionDto } from '../invitations/dto/send-invitation.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly invitationService: InvitationsService,
+  ) {}
 
   async create(
     createOrganizationDto: CreateOrganizationDto,
@@ -65,6 +70,10 @@ export class OrganizationsService {
   }
 
   async remove(id: string) {
-    return await this.databaseService.organization.delete({ id });
+    return await this.databaseService.organization.delete({ where: { id } });
+  }
+
+  async sendInvitation(data: SendInvitaionDto) {
+    console.log('send invitation', data);
   }
 }

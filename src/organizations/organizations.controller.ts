@@ -15,7 +15,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RoleNames } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard)
@@ -61,8 +60,26 @@ export class OrganizationsController {
   @Roles('OWNER', 'ADMIN')
   @UseGuards(RolesGuard)
   @Post(':id/invitations')
-  orgInvitacions() {
-    return 'organization invitations';
+  orgInvitacions(
+    @CurrentUser() user: AuthenticatedUserContext,
+    @Param('id') organizationId: string,
+    @Body() { roleId, email },
+  ) {
+    console.log(
+      'send id/invitation, user, orgid, roleid',
+      user.id,
+      ' ',
+      organizationId,
+      ' ',
+      roleId,
+    );
+
+    return this.organizationsService.sendInvitation({
+      organizationId,
+      email,
+      roleId,
+      createdByUserId: user.id,
+    });
   }
 
   @Post('invitations/accept')
