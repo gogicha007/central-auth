@@ -6,16 +6,19 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly db: DatabaseService) { }
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(createOrganizationDto: CreateOrganizationDto, creatorUserId: string) {
+  async create(
+    createOrganizationDto: CreateOrganizationDto,
+    creatorUserId: string,
+  ) {
     try {
-      return await this.db.$transaction(async (tx) => {
+      return await this.databaseService.$transaction(async (tx) => {
         const organization = await tx.organization.create({
           data: {
             name: createOrganizationDto.name,
             slug: createOrganizationDto.slug,
-            taxNo: createOrganizationDto.taxNo
+            taxNo: createOrganizationDto.taxNo,
           },
         });
 
@@ -45,18 +48,20 @@ export class OrganizationsService {
   }
 
   findAll() {
-    return `This action returns all organizations`;
+    return this.databaseService.organization.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} organization`;
+  findOne(id: string) {
+    return this.databaseService.organization.findUniqueOrThrow({
+      where: { id },
+    });
   }
 
-  update(id: number, updateOrganizationDto: UpdateOrganizationDto) {
-    return `This action updates a #${id} organization`;
+  update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
+    return `This action updates a #${id} organization - ${updateOrganizationDto.name}`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} organization`;
   }
 }

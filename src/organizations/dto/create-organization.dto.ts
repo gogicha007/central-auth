@@ -1,12 +1,12 @@
-import { IsString } from "class-validator"
+import { IsString } from 'class-validator';
 
 export class CreateOrganizationDto {
-    @IsString({ message: 'Organization name to be string' })
-    name!: string
+  @IsString({ message: 'Organization name to be string' })
+  name!: string;
 
-    @IsString({ message: 'Organization slug to be string' })
-    slug!: string
+  @IsString({ message: 'Organization slug to be string' })
+  slug!: string;
 
-    @IsString()
-    taxNo!: string
+  @IsString()
+  taxNo!: string;
 }

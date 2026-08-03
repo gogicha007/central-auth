@@ -44,6 +44,12 @@
         [x] validate jwt & session
         [x] revoke session (redis&DB) by sessionId
 
+    [ ] password/forgot
+
+    [ ] password/reset
+
+    [ ] password/change(authenticated)
+    
     AuthGuards
     [x] local strategy (validate email&password)
     [x] JwtStrategy (validate jwt signature + session)
@@ -70,7 +76,7 @@
 
     [x] create user
     [ ] update user
-    [ ] password change/reset
+
 
 ## Mail module
 

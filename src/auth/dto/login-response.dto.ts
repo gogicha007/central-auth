@@ -7,5 +7,5 @@ export class LoginResponseDto {
   accessToken?: string;
   expiresIn?: number;
   tokenType?: string;
-  isPlatformAdmin!: boolean
+  isPlatformAdmin!: boolean;
 }

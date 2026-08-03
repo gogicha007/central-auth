@@ -15,7 +15,7 @@ export type UserContext = {
   id: string;
   email: string;
   status: UserStatus;
-  isPlatformAdmin: boolean
+  isPlatformAdmin: boolean;
 };
 
 export type AuthenticatedUserContext = {

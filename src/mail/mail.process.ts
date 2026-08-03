@@ -40,8 +40,11 @@ export class MailProcessor extends WorkerHost {
         });
 
         this.logger.log(`Email successfully sent to ${to}`);
-      } catch (error: any) {
-        this.logger.error(`Failed to send email to ${to}`, error.stack);
+      } catch (error: unknown) {
+        this.logger.error(
+          `Failed to send email to ${to}`,
+          error instanceof Error ? error.stack : String(error),
+        );
         throw error;
       }
     }

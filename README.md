@@ -77,8 +77,18 @@ AuthGuards based on strategies using Passport library
 Other guards:
 
 - OrganizationGuard
+
 - RolesGuard
+  - first: roles guard checks if user isPlatformAdmin is true and gives unlimited access
+  - second: if not (isPlatformAdmin false) compares to the role user has in specific organization
+
 - PermissionsbGuard
+
+## Rate limiting
+  Multiple throttler definitions are set up in app.module
+  protected endpoints:
+    - auth/password/forgot endpoint protected with ip&email rate limiting
+
 
 ## Resopnse
 
@@ -158,3 +168,12 @@ Delegation rules
   
 - DIRECTOR, EMPLOYEE, VIEWER
   - no membership-management authority by default
+
+Endpoints
+- Create onganization - {POST} organizations/
+  - NOTE: creator of organization becomes OWNER. transacion covers three tables: organization, role and organizationMember
+    1. create organization (return organizationId)
+    2. create role RoleNames.OWNER (with organizationId)
+    3. create organizationMember (with organizationId, creatorUserId, roleID)
+
+

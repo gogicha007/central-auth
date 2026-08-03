@@ -12,9 +12,21 @@ import { RedisModule } from '../redis/redis.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
-  imports: [PasswordModule, PassportModule, RedisModule, SessionsModule, UsersModule,],
-  providers: [AuthService, LocalStrategy, JwtStrategy, JwtService, JwtAuthGuard],
+  imports: [
+    PasswordModule,
+    PassportModule,
+    RedisModule,
+    SessionsModule,
+    UsersModule,
+  ],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    JwtService,
+    JwtAuthGuard,
+  ],
   controllers: [AuthController],
-  exports: [JwtAuthGuard]
+  exports: [JwtAuthGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

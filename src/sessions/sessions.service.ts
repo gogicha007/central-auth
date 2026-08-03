@@ -8,7 +8,7 @@ export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);

@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Get,
-  Patch,
   Query,
   Req,
   UseGuards,
@@ -17,10 +16,13 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthenticatedUserContext, UserContext } from './auth.types';
 import type { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { Throttle } from '@nestjs/throttler';
+import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -82,6 +84,22 @@ export class AuthController {
     }
     return this.authService.getUserActiveSessions(user.id);
   }
+
+  @UseGuards(ForgotPasswordThrottlerGuard)
+  @Post('password/forgot')
+  @Throttle({
+    ipStrict: { limit: 5, ttl: 900000 },
+    emailStrict: { limit: 3, ttl: 900000 },
+  })
+  passwordForgot(@Body() data: ForgotPasswordDto) {
+    this.authService.forgotPassword(data.email);
+  }
+
+  @Post('password/reset')
+  passwordReset() {}
+
+  @Post('password/change')
+  passwordChange() {}
 
   @Get()
   health() {

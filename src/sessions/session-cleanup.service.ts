@@ -19,9 +19,8 @@ export class SessionCleanupService {
       10,
     );
 
-    const deletedCount = await this.sessionsService.cleanupRevokedSessions(
-      retentionDays,
-    );
+    const deletedCount =
+      await this.sessionsService.cleanupRevokedSessions(retentionDays);
 
     if (deletedCount > 0) {
       this.logger.log(`Cleaned up ${deletedCount} revoked sessions`);

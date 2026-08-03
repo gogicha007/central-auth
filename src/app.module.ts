@@ -33,8 +33,19 @@ import { OrganizationsModule } from './organizations/organizations.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => [
         {
+          name: 'default',
           ttl: config.get<number>('THROTTLER_TTL') || 60000, // in seconds
           limit: config.get<number>('THROTTLER_LIMIT') || 10,
+        },
+        {
+          name: 'ipStrict',
+          ttl: 900000, // 15 seconds in millsec
+          limit: 5,
+        },
+        {
+          name: 'emailStrict',
+          ttl: 900000,
+          limit: 3,
         },
       ],
     }),

@@ -7,7 +7,11 @@ import { SessionCleanupService } from './session-cleanup.service';
 
 @Module({
   imports: [DatabaseModule, RedisModule],
-  providers: [SessionsService, SessionCacheWarmupService, SessionCleanupService],
+  providers: [
+    SessionsService,
+    SessionCacheWarmupService,
+    SessionCleanupService,
+  ],
   exports: [SessionsService],
 })
 export class SessionsModule {}
