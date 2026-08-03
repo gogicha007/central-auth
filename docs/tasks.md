@@ -45,11 +45,14 @@
         [x] revoke session (redis&DB) by sessionId
 
     [ ] password/forgot
+        [x] create and store reset token
+        [x] send password reset email
+        [ ] accept users click on the link
 
     [ ] password/reset
 
     [ ] password/change(authenticated)
-    
+
     AuthGuards
     [x] local strategy (validate email&password)
     [x] JwtStrategy (validate jwt signature + session)
