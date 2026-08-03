@@ -5,7 +5,9 @@ import { DatabaseService } from '../database/database.service';
 @Injectable()
 export class RolesService {
   constructor(private readonly databaseService: DatabaseService) {}
-  create(role: CreateRoleDto) {
-    console.log('roles service create, role', role);
+  async create(data: CreateRoleDto) {
+    return await this.databaseService.role.create({
+      data
+    })
   }
 }
