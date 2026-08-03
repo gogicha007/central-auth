@@ -57,11 +57,14 @@ export class OrganizationsService {
     });
   }
 
-  update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
-    return `This action updates a #${id} organization - ${updateOrganizationDto.name}`;
+  async update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
+    return await this.databaseService.organization.update({
+      where: { id },
+      data: updateOrganizationDto,
+    });
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} organization`;
+  async remove(id: string) {
+    return await this.databaseService.organization.delete({ id });
   }
 }

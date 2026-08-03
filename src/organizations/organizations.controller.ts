@@ -14,6 +14,9 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { RoleNames } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
@@ -38,6 +41,8 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
+  @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -46,11 +51,15 @@ export class OrganizationsController {
     return this.organizationsService.update(id, updateOrganizationDto);
   }
 
+  @Roles('OWNER')
+  @UseGuards(RolesGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.organizationsService.remove(id);
   }
 
+  @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
   @Post(':id/invitations')
   orgInvitacions() {
     return 'organization invitations';

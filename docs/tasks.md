@@ -60,13 +60,18 @@
 
 ## Organizatoins module
 
-    create organization
+    [x] create organization
         [x] create organization
         [x] create role(OWNER)
         [x] create organization member
 
+    [x] update organizatoin
+    [x] delete organization
+
     [ ] Membership
-    [ ] Invite
+
+    [ ] Invite member
+
     [ ] roles
 
 ## Common
