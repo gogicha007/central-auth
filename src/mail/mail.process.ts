@@ -49,7 +49,7 @@ export class MailProcessor extends WorkerHost {
       }
     }
 
-    if (job.name === 'sent-password-reset') {
+    if (job.name === 'send-password-reset') {
       const { to, link } = job.data;
 
       this.logger.log(`Processing password reset email to ${to}`);

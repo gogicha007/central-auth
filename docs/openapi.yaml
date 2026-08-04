@@ -419,6 +419,24 @@ paths:
                     type: string
                     example: User not authenticated
 
+  /auth/password/forgot:
+    post:
+      summary: reset password
+      operationId: reset password
+      retuestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        
   /organizations:
     post:
       summary: create organization

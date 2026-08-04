@@ -27,6 +27,8 @@ Auth pattern - Session-bound JWT:
 - Logging: local LoggingService
 - API docs: Swagger
 
+# Auth module
+
 ## Authentication
 
 Sign-up:
@@ -84,13 +86,41 @@ Other guards:
 
 - PermissionsbGuard
 
-## Rate limiting
-  Multiple throttler definitions are set up in app.module
-  protected endpoints:
-    - auth/password/forgot endpoint protected with ip&email rate limiting
+## Password management
 
+Password-reset flow
 
-## Resopnse
+1. User requests password reset
+   - POST /auth/password/forgot
+   - Backend validates the email, creates a one-time reset token, stores its hash and emails a link
+
+2. Email contains a short-lived link
+   - sent to frontend app route: www.frontend-url.com/reset-password?token=...
+   - the link includes only token(not password)
+
+3. User clicks the link
+   - frontend reads the token from the link and
+   - frontend sends the token to backend for validation
+     - GET /auth/password/reset/validate?token=...
+     - backend checks
+       - token exists
+       - token hash matches a stored recort
+       - token is not expired
+       - token belongs to an active user
+   - backend returns a validation result
+   - frontent reacts accordingly:
+     - if valid: show the password form
+     - if invalid: show an error and ask the user to request a new reset link
+   - by submitting password form frontend sends request:
+     - POST /auth/password/reset
+     - body: {token, newPassword}
+
+# Rate limiting
+
+Multiple throttler definitions are set up in app.module
+protected endpoints: - auth/password/forgot endpoint protected with ip&email rate limiting
+
+# Resopnse
 
 in case of success:
 {
@@ -105,9 +135,12 @@ statusCode: number,
 message: string
 }
 
-## Sessions
+# Sessions module
 
-## Organizations
+- cleanup revoked sessions: removes records of revoked sessions after retention days
+- get user active sessions: returns the list of active sessions by user
+
+# Organizations
 
 Authorization matrix
 
@@ -165,15 +198,14 @@ Delegation rules
 - MANAGER
   - can invite EMPLOYEE and VIEWER
   - cannot assign ADMIN
-  
+
 - DIRECTOR, EMPLOYEE, VIEWER
   - no membership-management authority by default
 
 Endpoints
+
 - Create onganization - {POST} organizations/
   - NOTE: creator of organization becomes OWNER. transacion covers three tables: organization, role and organizationMember
     1. create organization (return organizationId)
     2. create role RoleNames.OWNER (with organizationId)
     3. create organizationMember (with organizationId, creatorUserId, roleID)
-
-

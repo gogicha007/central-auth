@@ -22,7 +22,7 @@ import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -95,11 +95,16 @@ export class AuthController {
     return this.authService.forgotPassword(data.email);
   }
 
+  @Post('password/reset/validate')
+  validatePassResetToken(@Body() token: string) {
+    return this.authService.validateToken(token)
+  }
+
   @Post('password/reset')
-  passwordReset() {}
+  passwordReset() { }
 
   @Post('password/change')
-  passwordChange() {}
+  passwordChange() { }
 
   @Get()
   health() {

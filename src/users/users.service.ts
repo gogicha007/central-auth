@@ -22,7 +22,7 @@ export class UsersService {
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
-  ) {}
+  ) { }
 
   async create(payload: CreateUserDto) {
     const existingUser = await this.dbService.user.findUnique({
@@ -273,12 +273,41 @@ export class UsersService {
       });
     });
 
-    await this.mailService.sentPasswordResetEmail(email, resetToken);
+    await this.mailService.sendPasswordResetEmail(email, resetToken);
 
     //TODO: audit log
 
     return ok(
       'If an account exists with that email, a password reset link has been sent.',
     );
+  }
+
+  async verifyPasswordResetToken(token: string) {
+    if (!token) throw new BadRequestException('Reset token not found');
+
+    const now = new Date();
+
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const userToken = await this.dbService.userToken.findFirst({
+      where: {
+        tokenHash,
+        type: TokenType.PASSWORD_RESET,
+        usedAt: null,
+        expiresAt: { gte: now },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!userToken) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    return ok('Password reset token is valid');
   }
 }

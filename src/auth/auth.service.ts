@@ -185,4 +185,8 @@ export class AuthService {
   async forgotPassword(email: string) {
     return await this.userService.forgotPassword(email);
   }
+
+  async validateToken(token: string){
+    return 'validate token'
+  }
 }

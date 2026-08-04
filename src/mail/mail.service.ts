@@ -27,8 +27,8 @@ export class MailService {
     );
   }
 
-  async sentPasswordResetEmail(email: string, token: string) {
-    const baseUrl = this.configService.get<string>('APP_URL');
+  async sendPasswordResetEmail(email: string, token: string) {
+    const baseUrl = this.configService.get<string>('FRONT_URL');
     const passwordResetLink = `${baseUrl}/auth/reset-password?token=${token}`;
 
     await this.mailQueue.add(
