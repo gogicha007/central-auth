@@ -4,7 +4,7 @@ import { UserValidators } from '../../common/validators/user.validators';
 
 export class ForgotPasswordDto {
   @IsEmail({}, UserValidators.EMAIL_RULES)
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email is required' })
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )

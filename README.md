@@ -101,8 +101,8 @@ Password-reset flow
 3. User clicks the link
    - frontend reads the token from the link and
    - frontend sends the token to backend for validation
-     - GET /auth/password/reset/validate?token=...
-     - backend checks
+     - POST /auth/password/reset/validate - body: {token}
+     - backend checks if
        - token exists
        - token hash matches a stored recort
        - token is not expired
@@ -114,6 +114,10 @@ Password-reset flow
    - by submitting password form frontend sends request:
      - POST /auth/password/reset
      - body: {token, newPassword}
+   - backend 
+       - validates the token, updates as used (in user_token table)
+       - updates user password
+       - revokes all active sessions by user (DB&Redis)
 
 # Rate limiting
 

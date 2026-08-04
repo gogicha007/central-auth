@@ -15,6 +15,10 @@ import { LoginDto } from '../auth/dto/login.dto';
 import { PasswordService } from '../common/password/password.service';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { blockedStatuses } from './constants';
+import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
+import { SessionsService } from '../sessions/sessions.service';
+import { RedisService } from '../redis/redis.service';
+import { getSessionCacheKey } from '../auth/auth-session-cache.util';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +26,8 @@ export class UsersService {
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
+    private readonly sessionService: SessionsService,
+    private readonly redisService: RedisService
   ) { }
 
   async create(payload: CreateUserDto) {
@@ -309,5 +315,62 @@ export class UsersService {
     }
 
     return ok('Password reset token is valid');
+  }
+
+  async resetPassword(data: ResetPasswordDto) {
+    const now = new Date()
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(data.token)
+      .digest('hex')
+
+    let activeUserSessions: {
+      id: string;
+      userId: string;
+      expiresAt: Date;
+      idleExpiresAt: Date;
+      revokedAt: Date | null;
+      refreshVersion: number;
+    }[]
+
+    try {
+      await this.dbService.$transaction(async (tx) => {
+        const updatedToken = await tx.userToken.update({
+          where: {
+            tokenHash,
+            type: TokenType.PASSWORD_RESET,
+            usedAt: null,
+            expiresAt: { gte: now }
+          },
+          data: { usedAt: now },
+          select: { userId: true }
+        })
+        const passwordHash = await this.passwordService.hash(data.newPassword);
+
+        await tx.user.update({
+          where: {
+            id: updatedToken.userId
+          },
+          data: {
+            passwordHash
+          }
+        })
+
+        activeUserSessions = await this.sessionService.getUserActiveSessions(updatedToken.userId)
+        await this.sessionService.revokeSessionsByUserId(updatedToken.userId, 'password reset')
+
+        await Promise.all(
+          activeUserSessions.map((session) => this.redisService.delete(getSessionCacheKey(session.id)))
+        )
+      })
+
+      return ok('Password reset successfully')
+    } catch (error) {
+      handlePrismaError(error)
+    }
+
+
+
+
   }
 }

@@ -19,6 +19,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { Throttle } from '@nestjs/throttler';
 import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler.guard';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResetTokenValidateDto } from './dto/reset-token-validate.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -96,13 +98,16 @@ export class AuthController {
   }
 
   @Post('password/reset/validate')
-  validatePassResetToken(@Body() token: string) {
-    return this.authService.validateToken(token)
+  validatePassResetToken(@Body() resetToken: ResetTokenValidateDto) {
+    return this.authService.validateToken(resetToken.token)
   }
 
   @Post('password/reset')
-  passwordReset() { }
+  passwordReset(@Body() data: ResetPasswordDto) {
+    return this.authService.resetPassword(data)
+  }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('password/change')
   passwordChange() { }
 

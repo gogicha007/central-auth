@@ -18,6 +18,7 @@ import {
   getJwtOptions,
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -175,7 +176,7 @@ export class AuthService {
   }
 
   getSessions() {
-    return this.sessionsService.getActiveSessions();
+    return this.sessionsService.getAllActiveSessions();
   }
 
   getUserActiveSessions(userId: string) {
@@ -186,7 +187,11 @@ export class AuthService {
     return await this.userService.forgotPassword(email);
   }
 
-  async validateToken(token: string){
-    return 'validate token'
+  async validateToken(token: string) {
+    return await this.userService.verifyPasswordResetToken(token);
+  }
+
+  async resetPassword(data: ResetPasswordDto) {
+    return await this.userService.resetPassword(data)
   }
 }

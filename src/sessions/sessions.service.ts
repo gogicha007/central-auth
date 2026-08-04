@@ -8,7 +8,7 @@ export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);
@@ -108,7 +108,21 @@ export class SessionsService {
     return revokedSession;
   }
 
-  async getActiveSessions() {
+  async revokeSessionsByUserId(userId: string, reason: string) {
+    const now = new Date()
+    await this.dbService.session.updateMany({
+      where: {
+        userId,
+        revokedAt: null
+      },
+      data: {
+        revokedAt: now,
+        revokedReason: reason
+      }
+    })
+  }
+
+  async getAllActiveSessions() {
     const now = new Date();
     const activeSessions = await this.dbService.session.findMany({
       where: {
