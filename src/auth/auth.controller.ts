@@ -21,6 +21,7 @@ import { Throttle } from '@nestjs/throttler';
 import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler.guard';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResetTokenValidateDto } from './dto/reset-token-validate.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -109,7 +110,14 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('password/change')
-  passwordChange() { }
+  passwordChange(@Req() req: Request, @Body() data: ChangePasswordDto) { 
+    const user = req.user as AuthenticatedUserContext;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    const payload = {...data, userId: user.id}
+    return this.authService.changePassword(payload)
+  }
 
   @Get()
   health() {

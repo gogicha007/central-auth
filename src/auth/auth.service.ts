@@ -19,6 +19,7 @@ import {
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -193,5 +194,9 @@ export class AuthService {
 
   async resetPassword(data: ResetPasswordDto) {
     return await this.userService.resetPassword(data)
+  }
+
+  async changePassword(data: ChangePasswordDto) {
+    return await this.userService.changePassword(data)
   }
 }

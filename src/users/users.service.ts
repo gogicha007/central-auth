@@ -19,6 +19,7 @@ import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
 import { SessionsService } from '../sessions/sessions.service';
 import { RedisService } from '../redis/redis.service';
 import { getSessionCacheKey } from '../auth/auth-session-cache.util';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -165,6 +166,7 @@ export class UsersService {
         email: true,
         status: true,
         isPlatformAdmin: true,
+        passwordHash: true
       },
     });
   }
@@ -368,9 +370,45 @@ export class UsersService {
     } catch (error) {
       handlePrismaError(error)
     }
+  }
 
+  async changePassword(data: ChangePasswordDto) {
+    const user = await this.findById(data.userId as string)
 
+    if (!user) throw new UnauthorizedException('User not found');
 
+    const checkOldPassword =
+      await this.passwordService.compare(data.currentPassword, user.passwordHash)
 
+    if (!checkOldPassword) throw new UnauthorizedException('Invalid old password');
+
+    const isSamePassword = await this.passwordService.compare(
+      data.newPassword,
+      user.passwordHash,
+    );
+
+    if (isSamePassword) {
+      throw new BadRequestException('New password must be different from the current password');
+    }
+
+    const passwordHash = await this.passwordService.hash(data.newPassword);
+
+    await this.dbService.user.update({
+      where: {
+        id: user.id
+      },
+      data: {
+        passwordHash
+      }
+    })
+
+    const activeUserSessions = await this.sessionService.getUserActiveSessions(user.id)
+    await this.sessionService.revokeSessionsByUserId(user.id, 'password change')
+
+    await Promise.all(
+      activeUserSessions.map((session) => this.redisService.delete(getSessionCacheKey(session.id)))
+    )
+
+    return ok('Password successfully changed')
   }
 }

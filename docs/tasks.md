@@ -44,12 +44,11 @@
         [x] validate jwt & session
         [x] revoke session (redis&DB) by sessionId
 
-    [ ] password/forgot
+    [x] password/forgot(reset)
         [x] create and store reset token
         [x] send password reset email
-        [ ] accept users click on the link
-
-    [ ] password/reset
+        [x] request from the frontent to verify token
+        [x] request from the forntend to reset the password
 
     [ ] password/change(authenticated)
 
@@ -88,11 +87,14 @@
     [x] create user
     [ ] update user
 
-
 ## Mail module
 
     [x] mail service
+        [x] send verification email link
+        [x] send password reset email link
     [x] mail processor
+        [x] verify email
+        [x] reset password
 
 ## Session module
 
