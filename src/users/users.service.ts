@@ -248,14 +248,27 @@ export class UsersService {
       .update(resetToken)
       .digest('hex')
 
-    await this.dbService.userToken.create({
-      data: {
-        userId: user.id,
-        type: TokenType.PASSWORD_RESET,
-        tokenHash,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        usedAt: null
-      }
+    await this.dbService.$transaction(async (tx)=>{
+      await tx.userToken.updateMany({
+        where: {
+          userId: user.id,
+          type: TokenType.PASSWORD_RESET
+        },
+        data: {
+          usedAt: new Date(),
+        }
+      })
+      
+      await tx.userToken.create({
+        data: {
+          userId: user.id,
+          type: TokenType.PASSWORD_RESET,
+          tokenHash,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          usedAt: null
+        }
+      })
+
     })
 
     await this.mailService.sentPasswordResetEmail(email, resetToken)
