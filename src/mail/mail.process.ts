@@ -52,7 +52,7 @@ export class MailProcessor extends WorkerHost {
     if (job.name === 'sent-password-reset') {
       const { to, link } = job.data;
 
-      this.logger.log(`Processing password reset email to ${to}`)
+      this.logger.log(`Processing password reset email to ${to}`);
 
       try {
         await this.transporter.sendMail({

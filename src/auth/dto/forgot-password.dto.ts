@@ -6,6 +6,7 @@ export class ForgotPasswordDto {
   @IsEmail({}, UserValidators.EMAIL_RULES)
   @IsNotEmpty()
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value)
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email!: string;
 }

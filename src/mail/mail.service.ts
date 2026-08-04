@@ -8,7 +8,7 @@ export class MailService {
   constructor(
     @InjectQueue('mail-queue') private readonly mailQueue: Queue,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async sendVerificationEmail(email: string, token: string) {
     const baseUrl = this.configService.get<string>('APP_URL');
@@ -28,19 +28,19 @@ export class MailService {
   }
 
   async sentPasswordResetEmail(email: string, token: string) {
-    const baseUrl = this.configService.get<string>('APP_URL')
+    const baseUrl = this.configService.get<string>('APP_URL');
     const passwordResetLink = `${baseUrl}/auth/reset-password?token=${token}`;
 
     await this.mailQueue.add(
       'send-password-reset',
       {
         to: email,
-        link: passwordResetLink
+        link: passwordResetLink,
       },
       {
         attempts: 3,
-        backoff: 5000
-      }
-    )
+        backoff: 5000,
+      },
+    );
   }
 }

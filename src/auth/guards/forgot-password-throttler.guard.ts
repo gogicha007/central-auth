@@ -3,13 +3,23 @@ import {
   ThrottlerGuard,
   ThrottlerException,
   ThrottlerRequest,
+  ThrottlerOptions,
 } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 
 @Injectable()
 export class ForgotPasswordThrottlerGuard extends ThrottlerGuard {
-  protected getTracker(req: Request): Promise<string> {
+  protected getTracker(
+    req: Request,
+    throttler?: ThrottlerOptions,
+  ): Promise<string> {
+    if (throttler?.name === 'emailStrict') {
+      const body = req.body as ForgotPasswordDto | undefined;
+      const email = (body?.email?.trim().toLowerCase() as string) || '';
+      return Promise.resolve(`email:${email}`);
+    }
+
     const rawForwardedFor = req.headers['x-forwarded-for'];
 
     const forwardedFor = Array.isArray(rawForwardedFor)
@@ -17,10 +27,8 @@ export class ForgotPasswordThrottlerGuard extends ThrottlerGuard {
       : rawForwardedFor;
 
     const ip = (req.ip as string) || forwardedFor || 'unknown-ip';
-    const body = req.body as ForgotPasswordDto | undefined;
-    const email = (body?.email?.toLowerCase() as string) || '';
 
-    return Promise.resolve(`${ip}:${email}`);
+    return Promise.resolve(`id:${ip}`);
   }
 
   protected async handleRequest(

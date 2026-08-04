@@ -22,7 +22,7 @@ export class UsersService {
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
-  ) { }
+  ) {}
 
   async create(payload: CreateUserDto) {
     const existingUser = await this.dbService.user.findUnique({
@@ -230,51 +230,55 @@ export class UsersService {
   async forgotPassword(email: string) {
     const user = await this.dbService.user.findUnique({
       where: {
-        email
+        email,
       },
       select: {
         id: true,
         email: true,
         status: true,
-      }
-    })
+      },
+    });
 
-    if (!user || blockedStatuses.includes(user.status)) return ok('If an account exists with that email, a password reset link has been sent.')
+    if (!user || blockedStatuses.includes(user.status))
+      return ok(
+        'If an account exists with that email, a password reset link has been sent.',
+      );
 
-    const resetToken = crypto.randomBytes(32).toString('hex')
+    const resetToken = crypto.randomBytes(32).toString('hex');
 
     const tokenHash = crypto
       .createHash('sha256')
       .update(resetToken)
-      .digest('hex')
+      .digest('hex');
 
-    await this.dbService.$transaction(async (tx)=>{
+    await this.dbService.$transaction(async (tx) => {
       await tx.userToken.updateMany({
         where: {
           userId: user.id,
-          type: TokenType.PASSWORD_RESET
+          type: TokenType.PASSWORD_RESET,
         },
         data: {
           usedAt: new Date(),
-        }
-      })
-      
+        },
+      });
+
       await tx.userToken.create({
         data: {
           userId: user.id,
           type: TokenType.PASSWORD_RESET,
           tokenHash,
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-          usedAt: null
-        }
-      })
+          usedAt: null,
+        },
+      });
+    });
 
-    })
-
-    await this.mailService.sentPasswordResetEmail(email, resetToken)
+    await this.mailService.sentPasswordResetEmail(email, resetToken);
 
     //TODO: audit log
 
-    return ok('If an account exists with that email, a password reset link has been sent.')
+    return ok(
+      'If an account exists with that email, a password reset link has been sent.',
+    );
   }
 }

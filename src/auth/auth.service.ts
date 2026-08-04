@@ -28,7 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);

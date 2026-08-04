@@ -7,7 +7,7 @@ export class RolesService {
   constructor(private readonly databaseService: DatabaseService) {}
   async create(data: CreateRoleDto) {
     return await this.databaseService.role.create({
-      data
-    })
+      data,
+    });
   }
 }

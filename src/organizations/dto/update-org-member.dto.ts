@@ -1,5 +1,5 @@
-import { CreateOrganizationMemberDto } from "./create-org-member.dto";
+import { CreateOrganizationMemberDto } from './create-org-member.dto';
 
 export class UpdateOrganizationMemberDto extends CreateOrganizationMemberDto {
-    id!: string
+  id!: string;
 }
