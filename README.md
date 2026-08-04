@@ -88,7 +88,7 @@ Other guards:
 
 ## Password management
 
-Password-reset flow
+Password recovery flow
 
 1. User requests password reset
    - POST /auth/password/forgot
@@ -119,6 +119,11 @@ Password-reset flow
        - updates user password
        - revokes all active sessions by user (DB&Redis)
 
+
+Password change for authenticated user
+  - POST password/change, body {currentPassword, newPassword}
+  - verify currentPassword, check old and new passwords are not the same
+  - revoke all active sessions by user (DB&Redis)
 # Rate limiting
 
 Multiple throttler definitions are set up in app.module
