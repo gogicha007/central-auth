@@ -7,7 +7,9 @@ export class SendInvitaionDto {
   @IsEmail({}, UserValidators.EMAIL_RULES)
   email!: string;
 
-  roleId!: string;
+  roleName!: string
+
+  roleId?: string;
 
   createdByUserId!: string;
 }

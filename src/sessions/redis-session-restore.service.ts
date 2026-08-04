@@ -11,7 +11,7 @@ export class SessionCacheWarmupService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    const activeSessions = await this.sessionsService.getActiveSessions();
+    const activeSessions = await this.sessionsService.getAllActiveSessions();
 
     await Promise.all(
       activeSessions.map((session) => cacheSession(this.redisService, session)),

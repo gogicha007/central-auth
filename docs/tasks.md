@@ -57,6 +57,10 @@
     [x] JwtStrategy (validate jwt signature + session)
     [x] JwtAuthGuard
 
+## Invitations module
+    [ ] create invitation
+
+    
 ## Organizatoins module
 
     [x] create organization
@@ -73,6 +77,8 @@
         [ ] create invitation
         [ ] send invitation email to user
 
+
+## Roles module
     [ ] roles
         [ ] create role
 

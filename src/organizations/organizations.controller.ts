@@ -16,11 +16,17 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesService } from '../roles/roles.service';
+import { CreateRoleDto } from '../roles/dto/create-role.dto';
+import { RoleNames } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(
+    private readonly organizationsService: OrganizationsService,
+    private readonly rolesService: RolesService,
+  ) {}
 
   @Post()
   create(
@@ -63,7 +69,7 @@ export class OrganizationsController {
   orgInvitacions(
     @CurrentUser() user: AuthenticatedUserContext,
     @Param('id') organizationId: string,
-    @Body() { roleId, email },
+    @Body() { roleName, email },
   ) {
     console.log(
       'send id/invitation, user, orgid, roleid',
@@ -71,13 +77,13 @@ export class OrganizationsController {
       ' ',
       organizationId,
       ' ',
-      roleId,
+      roleName,
     );
 
     return this.organizationsService.sendInvitation({
       organizationId,
       email,
-      roleId,
+      roleName,
       createdByUserId: user.id,
     });
   }
@@ -90,5 +96,17 @@ export class OrganizationsController {
   @Patch(':id/members/:memberId/role')
   membershipRoles() {
     return 'membership roles';
+  }
+
+  @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
+  @Post(':organizationId/roles')
+  createRole(
+    @Param('organizationId') organizationId: string,
+    @Body() data: { name: string; description: string },
+  ) {
+    const roleName = RoleNames[data.name];
+    const payload = { ...data, name: roleName, organizationId };
+    return this.organizationsService.createRole(payload);
   }
 }

@@ -218,3 +218,5 @@ Endpoints
     1. create organization (return organizationId)
     2. create role RoleNames.OWNER (with organizationId)
     3. create organizationMember (with organizationId, creatorUserId, roleID)
+
+- Invite members - POST roganizations/:id/invitations body {email, roleId, create}
