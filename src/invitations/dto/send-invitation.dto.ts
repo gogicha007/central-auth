@@ -1,15 +1,14 @@
 import { IsEmail } from 'class-validator';
 import { UserValidators } from '../../common/validators/user.validators';
+import { RoleNames } from '@prisma/client';
 
-export class SendInvitaionDto {
+export class SendInvitationDto {
   organizationId!: string;
 
   @IsEmail({}, UserValidators.EMAIL_RULES)
   email!: string;
 
-  roleName!: string
-
-  roleId?: string;
+  roleId!: string;
 
   createdByUserId!: string;
 }

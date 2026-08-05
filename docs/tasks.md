@@ -74,13 +74,18 @@
     [ ] Membership
 
     [ ] Invite member
-        [ ] create invitation
         [ ] send invitation email to user
+            - request: organizations/:id/invitations, body {roleName, email}
+            - check if role exists in roles table
+            - send email link with query: organizationId, roleId, userId
+        [ ] invitation accept
+            - 
 
 
 ## Roles module
-    [ ] roles
-        [ ] create role
+    [x] roles
+        [x] create role
+        [x] update role (description& isSystem fields only)
 
 ## Common
 

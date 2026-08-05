@@ -26,50 +26,46 @@ export class MailProcessor extends WorkerHost {
   }
 
   async process(job: Job<{ to: string; link: string }>): Promise<any> {
+    const { to, link } = job.data;
+    let loggerMessage = `Processing verification email to ${to}`
+    let htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`
+    let subject = 'Verify email'
+
     if (job.name === 'send-verification-email') {
-      const { to, link } = job.data;
-
-      this.logger.log(`Processing verification email to ${to}`);
-
-      try {
-        await this.transporter.sendMail({
-          from: `"Central Auth" <no-reply@centralapp.com`,
-          to,
-          subject: 'Verify Your email Address',
-          html: `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`,
-        });
-
-        this.logger.log(`Email successfully sent to ${to}`);
-      } catch (error: unknown) {
-        this.logger.error(
-          `Failed to send email to ${to}`,
-          error instanceof Error ? error.stack : String(error),
-        );
-        throw error;
-      }
+      loggerMessage = `Processing verification email to ${to}`
+      htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`
+      subject = 'Verify email'
     }
 
     if (job.name === 'send-password-reset') {
-      const { to, link } = job.data;
+      loggerMessage = `Processing password reset email to ${to}`
+      htmlString = `<p>Please click here <a href="${link}"> to reset the password</a>.</p>`
+      subject = 'Reset password'
+    }
 
-      this.logger.log(`Processing password reset email to ${to}`);
+    if (job.name === 'send-invitation') {
+      loggerMessage = `Processing invitation email to ${to}`
+      htmlString = `<p>Please click here <a href="${link}"> accept invitation</a>.</p>`
+      subject = 'Invitation'
+    }
 
-      try {
-        await this.transporter.sendMail({
-          from: `"Central Auth" <no-reply@centralapp.com`,
-          to,
-          subject: 'Reset password',
-          html: `<p>Please click here <a href="${link}"> to reset the password</a>.</p>`,
-        });
+    this.logger.log(loggerMessage);
 
-        this.logger.log(`Email successfully sent to ${to}`);
-      } catch (error: unknown) {
-        this.logger.error(
-          `Failed to send email to ${to}`,
-          error instanceof Error ? error.stack : String(error),
-        );
-        throw error;
-      }
+    try {
+      await this.transporter.sendMail({
+        from: `"Central Auth" <no-reply@centralapp.com`,
+        to,
+        subject,
+        html: htmlString,
+      });
+
+      this.logger.log(`Email successfully sent to ${to}`);
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed to send email to ${to}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw error;
     }
   }
 }

@@ -1,12 +1,14 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { MemberStatus, RoleNames } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { InvitationsService } from '../invitations/invitations.service';
-import { SendInvitaionDto } from '../invitations/dto/send-invitation.dto';
+import { SendInvitationDto } from '../invitations/dto/send-invitation.dto';
 import { RolesService } from '../roles/roles.service';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
+import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
+
 
 @Injectable()
 export class OrganizationsService {
@@ -14,7 +16,7 @@ export class OrganizationsService {
     private readonly databaseService: DatabaseService,
     private readonly invitationService: InvitationsService,
     private readonly roleService: RolesService,
-  ) {}
+  ) { }
 
   async create(
     createOrganizationDto: CreateOrganizationDto,
@@ -76,9 +78,25 @@ export class OrganizationsService {
     return await this.databaseService.organization.delete({ where: { id } });
   }
 
-  async sendInvitation(data: SendInvitaionDto) {
-    console.log('send invitation', data);
+  async sendInvitation(data: SendInvitationRequestDto) {
+    const role = await this.roleService.findByOrgId(
+      data.organizationId,
+      data.roleName
+    );
+
+    if (!role) {
+      throw new NotFoundException(
+        `Role '${data.roleName}' does not exist in this organization.`
+      );
+    }
+    return await this.invitationService.create({
+      organizationId: data.organizationId,
+      roleId: role.id,
+      email: data.email,
+      createdByUserId: data.createdByUserId
+    })
   }
+
 
   async createRole(payload: CreateRoleDto) {
     return await this.roleService.create(payload);

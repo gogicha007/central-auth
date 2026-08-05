@@ -71,14 +71,6 @@ export class OrganizationsController {
     @Param('id') organizationId: string,
     @Body() { roleName, email },
   ) {
-    console.log(
-      'send id/invitation, user, orgid, roleid',
-      user.id,
-      ' ',
-      organizationId,
-      ' ',
-      roleName,
-    );
 
     return this.organizationsService.sendInvitation({
       organizationId,

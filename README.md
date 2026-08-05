@@ -124,6 +124,7 @@ Password change for authenticated user
   - POST password/change, body {currentPassword, newPassword}
   - verify currentPassword, check old and new passwords are not the same
   - revoke all active sessions by user (DB&Redis)
+
 # Rate limiting
 
 Multiple throttler definitions are set up in app.module
@@ -220,3 +221,7 @@ Endpoints
     3. create organizationMember (with organizationId, creatorUserId, roleID)
 
 - Invite members - POST roganizations/:id/invitations body {email, roleId, create}
+
+## Roles module
+  - create role
+  - update role (description & isSystem fields only)
