@@ -4,7 +4,6 @@ import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { InvitationsService } from '../invitations/invitations.service';
-import { SendInvitationDto } from '../invitations/dto/send-invitation.dto';
 import { RolesService } from '../roles/roles.service';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';

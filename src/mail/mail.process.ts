@@ -27,6 +27,7 @@ export class MailProcessor extends WorkerHost {
 
   async process(job: Job<{ to: string; link: string }>): Promise<any> {
     const { to, link } = job.data;
+    
     let loggerMessage = `Processing verification email to ${to}`
     let htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`
     let subject = 'Verify email'

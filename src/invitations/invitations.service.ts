@@ -54,6 +54,8 @@ export class InvitationsService {
       })
     })
 
+    await this.mailService.sendInvitationEmail(payload.email, invitationToken)
+
     return ok('Invitation sent to user');
   }
 }
