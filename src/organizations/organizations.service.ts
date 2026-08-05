@@ -96,6 +96,10 @@ export class OrganizationsService {
     })
   }
 
+  async acceptInvitation(token: string){
+    return this.invitationService.acceptInvitation(token) 
+  }
+
   async createRole(payload: CreateRoleDto) {
     return await this.roleService.create(payload);
   }

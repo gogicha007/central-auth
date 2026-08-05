@@ -14,11 +14,13 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUserContext } from '../auth/auth.types';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { RolesService } from '../roles/roles.service';
 import { RoleNames } from '@prisma/client';
+import type { AuthenticatedUserContext } from '../auth/auth.types';
+
 
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
@@ -39,6 +41,12 @@ export class OrganizationsController {
   @Get()
   findAll() {
     return this.organizationsService.findAll();
+  }
+
+  @Public()
+  @Get('invitations/accept')
+  invitationAccept(@Query('token') token: string) {
+    return this.organizationsService.acceptInvitation(token)
   }
 
   @Get(':id')
@@ -80,17 +88,6 @@ export class OrganizationsController {
     });
   }
 
-  //to-do make this public
-  @Get('invitations/accept')
-  invitacionAccept(@Query('token') token: string) {
-    return `invitation accept, token ${token}`;
-  }
-
-  @Patch(':id/members/:memberId/role')
-  membershipRoles() {
-    return 'membership roles';
-  }
-
   @Roles('OWNER', 'ADMIN')
   @UseGuards(RolesGuard)
   @Post(':organizationId/roles')
@@ -101,5 +98,10 @@ export class OrganizationsController {
     const roleName = RoleNames[data.name];
     const payload = { ...data, name: roleName, organizationId };
     return this.organizationsService.createRole(payload);
+  }
+
+  @Patch(':id/members/:memberId/role')
+  membershipRoles() {
+    return 'membership roles';
   }
 }
