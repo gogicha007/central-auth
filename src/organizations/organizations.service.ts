@@ -96,7 +96,6 @@ export class OrganizationsService {
     })
   }
 
-
   async createRole(payload: CreateRoleDto) {
     return await this.roleService.create(payload);
   }

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -17,7 +18,6 @@ import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesService } from '../roles/roles.service';
-import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { RoleNames } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard)
@@ -80,9 +80,10 @@ export class OrganizationsController {
     });
   }
 
-  @Post('invitations/accept')
-  invitacionAccept() {
-    return 'invitation accept';
+  //to-do make this public
+  @Get('invitations/accept')
+  invitacionAccept(@Query('token') token: string) {
+    return `invitation accept, token ${token}`;
   }
 
   @Patch(':id/members/:memberId/role')

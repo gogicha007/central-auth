@@ -46,7 +46,7 @@ export class MailService {
 
   async sendInvitationEmail(email: string, token: string) {
     const baseUrl = this.configService.get<string>('APP_URL')
-    const invitationLink = `${baseUrl}/auth/invitation?token=${token}`;
+    const invitationLink = `${baseUrl}/organizations/invitations/accept?token=${token}`;
 
     await this.mailQueue.add(
       'send-invitation',
