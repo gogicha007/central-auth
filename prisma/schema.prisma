@@ -59,7 +59,6 @@ model Organization {
 }
 
 enum MemberStatus {
-  INVITED
   ACTIVE
   SUSPENDED
   REMOVED
