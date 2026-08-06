@@ -27,14 +27,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signup')
-  signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
-  }
-
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async login(@Req() req: Request, @CurrentUser() user: UserContext) {
+  private getRequestContext(req: Request) {
     const forwarded = req.headers['x-forwarded-for'];
     const forwardedIp = Array.isArray(forwarded) ? forwarded[0] : forwarded;
 
@@ -44,6 +37,19 @@ export class AuthController {
       typeof req.headers['user-agent'] === 'string'
         ? req.headers['user-agent']
         : undefined;
+
+    return { ip, userAgent };
+  }
+
+  @Post('signup')
+  signUp(@Body() signUpDto: SignUpDto) {
+    return this.authService.signUp(signUpDto);
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Req() req: Request, @CurrentUser() user: UserContext) {
+    const { ip, userAgent } = this.getRequestContext(req);
     return this.authService.login(user, ip, userAgent);
   }
 
@@ -54,8 +60,9 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('refresh')
-  refresh(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refresh(refreshToken);
+  refresh(@Req() req: Request, @Body('refreshToken') refreshToken: string) {
+    const { ip, userAgent } = this.getRequestContext(req);
+    return this.authService.refresh(refreshToken, ip, userAgent);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -65,7 +72,8 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException('User not authenticated');
     }
-    return this.authService.logout(user);
+    const { ip, userAgent } = this.getRequestContext(req);
+    return this.authService.logout(user, ip, userAgent);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,7 +83,8 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException('User not authenticated');
     }
-    return this.authService.sessionRevoke(user.id, id);
+    const { ip, userAgent } = this.getRequestContext(req);
+    return this.authService.sessionRevoke(user.id, id, ip, userAgent);
   }
 
   @UseGuards(AuthGuard('jwt'))

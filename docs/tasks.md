@@ -58,9 +58,9 @@
     [x] JwtAuthGuard
 
 ## Invitations module
+
     [x] create invitation
 
-    
 ## Organizatoins module
 
     [x] create organization
@@ -78,11 +78,11 @@
                 - check if role exists in roles table
                 - send email link with query: organizationId, roleId, userId
             [x] invitation accept
-                - create member record 
-        [x] update membership role 
-
+                - create member record
+        [x] update membership role
 
 ## Roles module
+
     [x] roles
         [x] create role
         [x] update role (description& isSystem fields only)
@@ -120,3 +120,55 @@
     [x] exception filters
 
 ## Audit module
+
+Audit Actions
+[x] LOGIN
+[x] LOGIN_FAILED
+[x] LOGOUT
+[ხ] REFRESH_TOKEN
+[x] SESSION_REVOKED
+[x] PASSWORD_CHANGED
+[x] PASSWORD_RESET_REQUESTED
+[x] PASSWORD_RESET_COMPLETED
+[x] EMAIL_VERIFIED
+
+    // User
+
+[x] USER_CREATED
+[ ] USER_UPDATED
+[ ] USER_DEACTIVATED
+[ ] USER_REACTIVATED
+[ ] USER_DELETED
+
+    // Organization
+
+[x] ORGANIZATION_CREATED
+[x] ORGANIZATION_UPDATED
+[x] ORGANIZATION_DELETED
+[ ] ORGANIZATION_TRANSFERRED
+
+    // Membership
+
+[x] MEMBER_INVITED
+[x] MEMBER_JOINED
+[ ] MEMBER_REMOVED
+
+    // Roles
+
+[ ] ROLE_CREATED
+[ ] ROLE_UPDATED
+[ ] ROLE_DELETED
+[x] ROLE_ASSIGNED
+[ ] ROLE_REMOVED
+
+    // Permissions
+
+[ ] PERMISSION_GRANTED
+[ ] PERMISSION_REVOKED
+
+    // Security
+
+[ ] MFA_ENABLED
+[ ] MFA_DISABLED
+[ ] ACCOUNT_LOCKED
+[ ] ACCOUNT_UNLOCKED

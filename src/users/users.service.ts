@@ -15,7 +15,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { LoginDto } from '../auth/dto/login.dto';
 import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
-import { TokenType, UserStatus } from '@prisma/client';
+import { AuditAction, ResourceType, TokenType, UserStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
@@ -31,7 +31,7 @@ export class UsersService {
     private readonly sessionService: SessionsService,
     private readonly redisService: RedisService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async create(payload: CreateUserDto) {
     const existingUser = await this.dbService.user.findUnique({
@@ -154,6 +154,7 @@ export class UsersService {
           },
         });
       });
+
       return ok('Email verified successfully. You can now log in.');
     } catch (error) {
       handlePrismaError(error);
@@ -197,6 +198,7 @@ export class UsersService {
     );
 
     if (!checkPassword) {
+      let accountLocked = false
       await this.dbService.$transaction(async (tx) => {
         const failureCount = await tx.user.update({
           where: { id: user.id },
@@ -216,8 +218,22 @@ export class UsersService {
               status: UserStatus.LOCKED,
             },
           });
+          accountLocked = true
         }
       });
+      if (accountLocked) {
+        try {
+          await this.auditService.create({
+            action: AuditAction.ACCOUNT_LOCKED,
+            resource: ResourceType.USER,
+            userId: user.id,
+            resourceId: user.id,
+            metadata: { email: user.email },
+          })
+        } catch {
+          // Best-effort audit logging should not alter authentication behavior.
+        }
+      }
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -285,7 +301,13 @@ export class UsersService {
 
     await this.mailService.sendPasswordResetEmail(email, resetToken);
 
-    //TODO: audit log
+    await this.auditService.create({
+      action: AuditAction.PASSWORD_RESET_REQUESTED,
+      resource: ResourceType.USER,
+      userId: user.id,
+      resourceId: user.id,
+      metadata: { email: user.email },
+    })
 
     return ok(
       'If an account exists with that email, a password reset link has been sent.',
@@ -324,6 +346,7 @@ export class UsersService {
       .createHash('sha256')
       .update(data.token)
       .digest('hex');
+    let resetUserId: string | undefined;
 
     let activeUserSessions: {
       id: string;
@@ -346,6 +369,7 @@ export class UsersService {
           data: { usedAt: now },
           select: { userId: true },
         });
+        resetUserId = updatedToken.userId;
         const passwordHash = await this.passwordService.hash(data.newPassword);
 
         await tx.user.update({
@@ -371,6 +395,13 @@ export class UsersService {
           ),
         );
       });
+
+      await this.auditService.create({
+        action: AuditAction.PASSWORD_RESET_COMPLETED,
+        resource: ResourceType.USER,
+        userId: resetUserId,
+        resourceId: resetUserId,
+      })
 
       return ok('Password reset successfully');
     } catch (error) {
@@ -427,6 +458,12 @@ export class UsersService {
       ),
     );
 
+    await this.auditService.create({
+      action: AuditAction.PASSWORD_CHANGED,
+      resource: ResourceType.USER,
+      userId: user.id,
+      resourceId: user.id,
+    })
     return ok('Password successfully changed');
   }
 }

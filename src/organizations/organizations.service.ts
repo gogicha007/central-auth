@@ -1,9 +1,10 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { MemberStatus, RoleNames } from '@prisma/client';
+import { AuditAction, MemberStatus, ResourceType, RoleNames } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -12,13 +13,18 @@ import { RolesService } from '../roles/roles.service';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
 import { UpdateMembershipRoleDto } from './dto/update-membership-role';
+import { AuditService } from '../audit/audit.service';
+import { CreateAuditDto } from '../audit/dto/create-audit.dto';
 
 @Injectable()
 export class OrganizationsService {
+  private readonly logger = new Logger(OrganizationsService.name);
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly invitationService: InvitationsService,
     private readonly roleService: RolesService,
+    private readonly auditService: AuditService,
   ) {}
 
   async create(
@@ -26,7 +32,7 @@ export class OrganizationsService {
     creatorUserId: string,
   ) {
     try {
-      return await this.databaseService.$transaction(async (tx) => {
+      const organization = await this.databaseService.$transaction(async (tx) => {
         const organization = await tx.organization.create({
           data: {
             name: createOrganizationDto.name,
@@ -55,6 +61,18 @@ export class OrganizationsService {
 
         return organization;
       });
+
+      await this.createAuditLog(AuditAction.ORGANIZATION_CREATED, {
+        organizationId: organization.id,
+        userId: creatorUserId,
+        resource: ResourceType.ORGANIZATION,
+        resourceId: organization.id,
+        metadata: {
+          slug: organization.slug,
+        },
+      });
+
+      return organization;
     } catch {
       throw new ConflictException('Organization name or slug already exists');
     }
@@ -71,14 +89,30 @@ export class OrganizationsService {
   }
 
   async update(id: string, updateOrganizationDto: UpdateOrganizationDto) {
-    return await this.databaseService.organization.update({
+    const updatedOrganization = await this.databaseService.organization.update({
       where: { id },
       data: updateOrganizationDto,
     });
+
+    await this.createAuditLog(AuditAction.ORGANIZATION_UPDATED, {
+      organizationId: updatedOrganization.id,
+      resource: ResourceType.ORGANIZATION,
+      resourceId: updatedOrganization.id,
+    });
+
+    return updatedOrganization;
   }
 
   async remove(id: string) {
-    return await this.databaseService.organization.delete({ where: { id } });
+    const deletedOrganization = await this.databaseService.organization.delete({ where: { id } });
+
+    await this.createAuditLog(AuditAction.ORGANIZATION_DELETED, {
+      organizationId: deletedOrganization.id,
+      resource: ResourceType.ORGANIZATION,
+      resourceId: deletedOrganization.id,
+    });
+
+    return deletedOrganization;
   }
 
   async sendInvitation(data: SendInvitationRequestDto) {
@@ -119,7 +153,7 @@ export class OrganizationsService {
         `Role '${payload.roleName}' does not exist in this organization, please create one and try again.`,
       );
     }
-    return await this.databaseService.organizationMember.update({
+    const updatedMember = await this.databaseService.organizationMember.update({
       where: {
         id: payload.memberId,
         organizationId: payload.organizationId,
@@ -128,5 +162,36 @@ export class OrganizationsService {
         roleId: role.id,
       },
     });
+
+    await this.createAuditLog(AuditAction.ROLE_ASSIGNED, {
+      organizationId: payload.organizationId,
+      resource: ResourceType.ROLE,
+      resourceId: role.id,
+      metadata: {
+        memberId: payload.memberId,
+      },
+    });
+
+    return updatedMember;
+  }
+
+  private async createAuditLog(
+    action: AuditAction,
+    context: Omit<Partial<CreateAuditDto>, 'action'> = {},
+  ) {
+    try {
+      await this.auditService.create({
+        action,
+        resource: context.resource ?? ResourceType.ORGANIZATION,
+        organizationId: context.organizationId,
+        userId: context.userId,
+        resourceId: context.resourceId,
+        metadata: context.metadata,
+        ip: context.ip,
+        userAgent: context.userAgent,
+      });
+    } catch (error) {
+      this.logger.warn('Audit write failed', { action, error });
+    }
   }
 }

@@ -10,6 +10,7 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RedisModule } from '../redis/redis.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
     RedisModule,
     SessionsModule,
     UsersModule,
+    AuditModule
   ],
   providers: [
     AuthService,

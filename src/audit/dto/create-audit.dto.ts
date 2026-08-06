@@ -26,6 +26,10 @@ export class CreateAuditDto {
 
   @IsOptional()
   @IsString()
+  ip?: string;
+
+  @IsOptional()
+  @IsString()
   id?: string;
 
   @IsOptional()
