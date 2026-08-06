@@ -58,7 +58,7 @@
     [x] JwtAuthGuard
 
 ## Invitations module
-    [ ] create invitation
+    [x] create invitation
 
     
 ## Organizatoins module
@@ -118,3 +118,5 @@
     [x] password module/service
     [x] logger middleware
     [x] exception filters
+
+## Audit module

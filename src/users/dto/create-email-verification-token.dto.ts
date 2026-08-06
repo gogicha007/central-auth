@@ -8,8 +8,9 @@ export class CreateEmailVerificationTokenDto {
   tokenHash!: string;
 
   @IsDate()
-  @Transform(({ value }) => {
-    if (value) return new Date(value);
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string' || typeof value === 'number')
+      return new Date(value);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow;

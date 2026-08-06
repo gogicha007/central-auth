@@ -13,7 +13,7 @@ export class RolesController {
   @Roles('OWNER', 'ADMIN')
   @UseGuards(RolesGuard)
   @Patch(':id')
-  updatee(@Param() id: string, @Body() data: UpdateRoleDto) {
+  updatee(@Param('id') id: string, @Body() data: UpdateRoleDto) {
     return this.rolesService.update(id, data);
   }
 }

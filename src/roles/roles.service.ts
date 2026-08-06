@@ -13,7 +13,7 @@ export class RolesService {
       data,
     });
   }
-  
+
   async update(id: string, data: UpdateRoleDto) {
     return await this.dbService.role.update({
       where: { id },
@@ -21,15 +21,15 @@ export class RolesService {
     });
   }
 
-  async findByOrgId(organizationId: string, name: RoleNames){
-    console.log('roles service, findby org id', organizationId, ' ', name)
+  async findByOrgId(organizationId: string, name: RoleNames) {
+    console.log('roles service, findby org id', organizationId, ' ', name);
     return await this.dbService.role.findUnique({
       where: {
         organizationId_name: {
           organizationId,
-          name
-        }
-      }
-    })
+          name,
+        },
+      },
+    });
   }
 }

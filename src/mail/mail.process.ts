@@ -27,27 +27,27 @@ export class MailProcessor extends WorkerHost {
 
   async process(job: Job<{ to: string; link: string }>): Promise<any> {
     const { to, link } = job.data;
-    
-    let loggerMessage = `Processing verification email to ${to}`
-    let htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`
-    let subject = 'Verify email'
+
+    let loggerMessage = `Processing verification email to ${to}`;
+    let htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`;
+    let subject = 'Verify email';
 
     if (job.name === 'send-verification-email') {
-      loggerMessage = `Processing verification email to ${to}`
-      htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`
-      subject = 'Verify email'
+      loggerMessage = `Processing verification email to ${to}`;
+      htmlString = `<p>Welcome! Please verify your email by clicking <a href="${link}">here</a>.</p>`;
+      subject = 'Verify email';
     }
 
     if (job.name === 'send-password-reset') {
-      loggerMessage = `Processing password reset email to ${to}`
-      htmlString = `<p>Please click here <a href="${link}"> to reset the password</a>.</p>`
-      subject = 'Reset password'
+      loggerMessage = `Processing password reset email to ${to}`;
+      htmlString = `<p>Please click here <a href="${link}"> to reset the password</a>.</p>`;
+      subject = 'Reset password';
     }
 
     if (job.name === 'send-invitation') {
-      loggerMessage = `Processing invitation email to ${to}`
-      htmlString = `<p>Please click here <a href="${link}"> accept invitation</a>.</p>`
-      subject = 'Invitation'
+      loggerMessage = `Processing invitation email to ${to}`;
+      htmlString = `<p>Please click here <a href="${link}"> accept invitation</a>.</p>`;
+      subject = 'Invitation';
     }
 
     this.logger.log(loggerMessage);

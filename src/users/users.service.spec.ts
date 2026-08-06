@@ -48,7 +48,9 @@ describe('UsersService', () => {
   });
 
   it('should validate an active password reset token', async () => {
-    (service as any).dbService.userToken.findFirst.mockResolvedValue({ id: 'token-1' });
+    (service as any).dbService.userToken.findFirst.mockResolvedValue({
+      id: 'token-1',
+    });
 
     const result = await service.verifyPasswordResetToken('plain-token');
 
@@ -63,9 +65,9 @@ describe('UsersService', () => {
   it('should reject an invalid or expired password reset token', async () => {
     (service as any).dbService.userToken.findFirst.mockResolvedValue(null);
 
-    await expect(service.verifyPasswordResetToken('plain-token')).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(
+      service.verifyPasswordResetToken('plain-token'),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should reject a password change when the new password matches the current password', async () => {
@@ -94,7 +96,9 @@ describe('UsersService', () => {
       .mockResolvedValueOnce(true)
       .mockResolvedValueOnce(false);
     (service as any).passwordService.hash.mockResolvedValue('hashed-new');
-    (service as any).sessionService.getUserActiveSessions.mockResolvedValue([{ id: 'session-1' }]);
+    (service as any).sessionService.getUserActiveSessions.mockResolvedValue([
+      { id: 'session-1' },
+    ]);
 
     const result = await service.changePassword({
       userId: 'user-1',
@@ -108,10 +112,9 @@ describe('UsersService', () => {
         message: 'Password successfully changed',
       }),
     );
-    expect((service as any).sessionService.revokeSessionsByUserId).toHaveBeenCalledWith(
-      'user-1',
-      'password change',
-    );
+    expect(
+      (service as any).sessionService.revokeSessionsByUserId,
+    ).toHaveBeenCalledWith('user-1', 'password change');
     expect((service as any).redisService.delete).toHaveBeenCalled();
   });
 });

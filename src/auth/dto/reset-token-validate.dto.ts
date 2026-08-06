@@ -1,3 +1,3 @@
 export class ResetTokenValidateDto {
-    token!: string
+  token!: string;
 }

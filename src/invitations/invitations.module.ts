@@ -6,7 +6,7 @@ import { MailModule } from '../mail/mail.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [MailModule, DatabaseModule, UsersModule ],
+  imports: [MailModule, DatabaseModule, UsersModule],
   controllers: [InvitationsController],
   providers: [InvitationsService],
   exports: [InvitationsService],

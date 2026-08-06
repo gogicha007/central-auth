@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  Query
+  Query,
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -17,18 +17,14 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RolesService } from '../roles/roles.service';
 import { RoleNames } from '@prisma/client';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { UpdateMembershipRoleRequestDto } from './dto/update-membership-role';
 
-
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(
-    private readonly organizationsService: OrganizationsService,
-  ) { }
+  constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
   create(
@@ -46,7 +42,7 @@ export class OrganizationsController {
   @Public()
   @Get('invitations/accept')
   invitationAccept(@Query('token') token: string) {
-    return this.organizationsService.acceptInvitation(token)
+    return this.organizationsService.acceptInvitation(token);
   }
 
   @Get(':id')
@@ -77,9 +73,8 @@ export class OrganizationsController {
   orgInvitacions(
     @CurrentUser() user: AuthenticatedUserContext,
     @Param('id') organizationId: string,
-    @Body() { roleName, email },
+    @Body() { roleName, email }: { roleName: RoleNames; email: string },
   ) {
-
     return this.organizationsService.sendInvitation({
       organizationId,
       email,
@@ -95,7 +90,8 @@ export class OrganizationsController {
     @Param('organizationId') organizationId: string,
     @Body() data: { name: string; description: string },
   ) {
-    const roleName = RoleNames[data.name];
+    const key = data.name as keyof typeof RoleNames;
+    const roleName = RoleNames[key];
     const payload = { ...data, name: roleName, organizationId };
     return this.organizationsService.createRole(payload);
   }
@@ -106,13 +102,12 @@ export class OrganizationsController {
   membershipRoles(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Body() data: UpdateMembershipRoleRequestDto
+    @Body() data: UpdateMembershipRoleRequestDto,
   ) {
-
     return this.organizationsService.updateMembershipRole({
       organizationId: id,
       memberId,
-      roleName: data.roleName
-    })
+      roleName: data.roleName,
+    });
   }
 }

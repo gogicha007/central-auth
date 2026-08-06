@@ -28,8 +28,8 @@ export class UsersService {
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
     private readonly sessionService: SessionsService,
-    private readonly redisService: RedisService
-  ) { }
+    private readonly redisService: RedisService,
+  ) {}
 
   async create(payload: CreateUserDto) {
     const existingUser = await this.dbService.user.findUnique({
@@ -166,7 +166,7 @@ export class UsersService {
         email: true,
         status: true,
         isPlatformAdmin: true,
-        passwordHash: true
+        passwordHash: true,
       },
     });
   }
@@ -295,10 +295,7 @@ export class UsersService {
 
     const now = new Date();
 
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const userToken = await this.dbService.userToken.findFirst({
       where: {
@@ -320,11 +317,11 @@ export class UsersService {
   }
 
   async resetPassword(data: ResetPasswordDto) {
-    const now = new Date()
+    const now = new Date();
     const tokenHash = crypto
       .createHash('sha256')
       .update(data.token)
-      .digest('hex')
+      .digest('hex');
 
     let activeUserSessions: {
       id: string;
@@ -333,7 +330,7 @@ export class UsersService {
       idleExpiresAt: Date;
       revokedAt: Date | null;
       refreshVersion: number;
-    }[]
+    }[];
 
     try {
       await this.dbService.$transaction(async (tx) => {
@@ -342,45 +339,55 @@ export class UsersService {
             tokenHash,
             type: TokenType.PASSWORD_RESET,
             usedAt: null,
-            expiresAt: { gte: now }
+            expiresAt: { gte: now },
           },
           data: { usedAt: now },
-          select: { userId: true }
-        })
+          select: { userId: true },
+        });
         const passwordHash = await this.passwordService.hash(data.newPassword);
 
         await tx.user.update({
           where: {
-            id: updatedToken.userId
+            id: updatedToken.userId,
           },
           data: {
-            passwordHash
-          }
-        })
+            passwordHash,
+          },
+        });
 
-        activeUserSessions = await this.sessionService.getUserActiveSessions(updatedToken.userId)
-        await this.sessionService.revokeSessionsByUserId(updatedToken.userId, 'password reset')
+        activeUserSessions = await this.sessionService.getUserActiveSessions(
+          updatedToken.userId,
+        );
+        await this.sessionService.revokeSessionsByUserId(
+          updatedToken.userId,
+          'password reset',
+        );
 
         await Promise.all(
-          activeUserSessions.map((session) => this.redisService.delete(getSessionCacheKey(session.id)))
-        )
-      })
+          activeUserSessions.map((session) =>
+            this.redisService.delete(getSessionCacheKey(session.id)),
+          ),
+        );
+      });
 
-      return ok('Password reset successfully')
+      return ok('Password reset successfully');
     } catch (error) {
-      handlePrismaError(error)
+      handlePrismaError(error);
     }
   }
 
   async changePassword(data: ChangePasswordDto) {
-    const user = await this.findById(data.userId as string)
+    const user = await this.findById(data.userId as string);
 
     if (!user) throw new UnauthorizedException('User not found');
 
-    const checkOldPassword =
-      await this.passwordService.compare(data.currentPassword, user.passwordHash)
+    const checkOldPassword = await this.passwordService.compare(
+      data.currentPassword,
+      user.passwordHash,
+    );
 
-    if (!checkOldPassword) throw new UnauthorizedException('Invalid old password');
+    if (!checkOldPassword)
+      throw new UnauthorizedException('Invalid old password');
 
     const isSamePassword = await this.passwordService.compare(
       data.newPassword,
@@ -388,27 +395,36 @@ export class UsersService {
     );
 
     if (isSamePassword) {
-      throw new BadRequestException('New password must be different from the current password');
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
     }
 
     const passwordHash = await this.passwordService.hash(data.newPassword);
 
     await this.dbService.user.update({
       where: {
-        id: user.id
+        id: user.id,
       },
       data: {
-        passwordHash
-      }
-    })
+        passwordHash,
+      },
+    });
 
-    const activeUserSessions = await this.sessionService.getUserActiveSessions(user.id)
-    await this.sessionService.revokeSessionsByUserId(user.id, 'password change')
+    const activeUserSessions = await this.sessionService.getUserActiveSessions(
+      user.id,
+    );
+    await this.sessionService.revokeSessionsByUserId(
+      user.id,
+      'password change',
+    );
 
     await Promise.all(
-      activeUserSessions.map((session) => this.redisService.delete(getSessionCacheKey(session.id)))
-    )
+      activeUserSessions.map((session) =>
+        this.redisService.delete(getSessionCacheKey(session.id)),
+      ),
+    );
 
-    return ok('Password successfully changed')
+    return ok('Password successfully changed');
   }
 }

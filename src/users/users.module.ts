@@ -7,7 +7,13 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [MailModule, DatabaseModule, PasswordModule, SessionsModule, RedisModule],
+  imports: [
+    MailModule,
+    DatabaseModule,
+    PasswordModule,
+    SessionsModule,
+    RedisModule,
+  ],
   providers: [UsersService],
   exports: [UsersService],
 })

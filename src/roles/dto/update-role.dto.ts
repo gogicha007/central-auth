@@ -1,4 +1,4 @@
 export class UpdateRoleDto {
-    description!: string
-    isSystem?: boolean
+  description!: string;
+  isSystem?: boolean;
 }

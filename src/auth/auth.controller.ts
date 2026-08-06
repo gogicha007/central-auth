@@ -25,7 +25,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -100,23 +100,23 @@ export class AuthController {
 
   @Post('password/reset/validate')
   validatePassResetToken(@Body() resetToken: ResetTokenValidateDto) {
-    return this.authService.validateToken(resetToken.token)
+    return this.authService.validateToken(resetToken.token);
   }
 
   @Post('password/reset')
   passwordReset(@Body() data: ResetPasswordDto) {
-    return this.authService.resetPassword(data)
+    return this.authService.resetPassword(data);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('password/change')
-  passwordChange(@Req() req: Request, @Body() data: ChangePasswordDto) { 
+  passwordChange(@Req() req: Request, @Body() data: ChangePasswordDto) {
     const user = req.user as AuthenticatedUserContext;
     if (!user) {
       throw new UnauthorizedException('User not authenticated');
     }
-    const payload = {...data, userId: user.id}
-    return this.authService.changePassword(payload)
+    const payload = { ...data, userId: user.id };
+    return this.authService.changePassword(payload);
   }
 
   @Get()

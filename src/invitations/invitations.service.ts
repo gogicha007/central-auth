@@ -1,7 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { SendInvitationDto } from './dto/send-invitation.dto';
-import * as crypto from 'crypto'
+import * as crypto from 'crypto';
 import { MemberStatus, TokenType } from '@prisma/client';
 import { ok } from '../common/utils/api-response.util';
 import { MailService } from '../mail/mail.service';
@@ -12,26 +16,26 @@ export class InvitationsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
   async create(payload: SendInvitationDto) {
-    const invitationToken = crypto.randomBytes(32).toString('hex')
+    const invitationToken = crypto.randomBytes(32).toString('hex');
 
     const tokenHash = crypto
       .createHash('sha256')
       .update(invitationToken)
-      .digest('hex')
+      .digest('hex');
 
     await this.dbService.$transaction(async (tx) => {
       await tx.userToken.updateMany({
         where: {
           userId: payload.createdByUserId,
-          type: TokenType.INVITATION
+          type: TokenType.INVITATION,
         },
         data: {
-          usedAt: new Date()
-        }
-      })
+          usedAt: new Date(),
+        },
+      });
 
       await tx.userToken.create({
         data: {
@@ -39,23 +43,23 @@ export class InvitationsService {
           type: TokenType.INVITATION,
           tokenHash,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          usedAt: null
-        }
-      })
+          usedAt: null,
+        },
+      });
 
       await tx.invitation.create({
         data: {
           organizationId: payload.organizationId,
-          roleId: payload.roleId as string,
+          roleId: payload.roleId,
           createdByUserId: payload.createdByUserId,
           email: payload.email,
           token: tokenHash,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        }
-      })
-    })
+        },
+      });
+    });
 
-    await this.mailService.sendInvitationEmail(payload.email, invitationToken)
+    await this.mailService.sendInvitationEmail(payload.email, invitationToken);
 
     return ok('Invitation sent to user');
   }
@@ -65,12 +69,9 @@ export class InvitationsService {
       throw new BadRequestException('Token not found');
     }
 
-    const now = new Date()
+    const now = new Date();
 
-    const tokenHash = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     try {
       await this.dbService.$transaction(async (tx) => {
@@ -85,7 +86,7 @@ export class InvitationsService {
             roleId: true,
             email: true,
           },
-        })
+        });
 
         if (!invitation) {
           throw new BadRequestException('Invalid or expired invitation');
@@ -99,7 +100,7 @@ export class InvitationsService {
             expiresAt: { gte: now },
           },
           data: { usedAt: now },
-        })
+        });
 
         await tx.invitation.updateMany({
           where: {
@@ -110,30 +111,31 @@ export class InvitationsService {
           data: {
             acceptedAt: now,
           },
-        })
+        });
 
-        const { organizationId, roleId, email } = invitation
+        const { organizationId, roleId, email } = invitation;
 
         const user = await tx.user.findUnique({
           where: { email },
-          select: { id: true }
-        })
+          select: { id: true },
+        });
 
-        if (!user) throw new NotFoundException('user not found')
+        if (!user) throw new NotFoundException('user not found');
 
         await tx.organizationMember.create({
           data: {
             organizationId,
             userId: user.id,
             roleId,
-            status: MemberStatus.ACTIVE
-          }
-        })
-      })
-      return ok('User invitation accepted, used registered as member of organization')
+            status: MemberStatus.ACTIVE,
+          },
+        });
+      });
+      return ok(
+        'User invitation accepted, used registered as member of organization',
+      );
     } catch (error) {
-      handlePrismaError(error)
+      handlePrismaError(error);
     }
   }
-
 }

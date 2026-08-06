@@ -30,7 +30,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -193,10 +193,10 @@ export class AuthService {
   }
 
   async resetPassword(data: ResetPasswordDto) {
-    return await this.userService.resetPassword(data)
+    return await this.userService.resetPassword(data);
   }
 
   async changePassword(data: ChangePasswordDto) {
-    return await this.userService.changePassword(data)
+    return await this.userService.changePassword(data);
   }
 }

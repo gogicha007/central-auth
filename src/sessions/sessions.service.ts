@@ -8,7 +8,7 @@ export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);
@@ -109,17 +109,17 @@ export class SessionsService {
   }
 
   async revokeSessionsByUserId(userId: string, reason: string) {
-    const now = new Date()
+    const now = new Date();
     await this.dbService.session.updateMany({
       where: {
         userId,
-        revokedAt: null
+        revokedAt: null,
       },
       data: {
         revokedAt: now,
-        revokedReason: reason
-      }
-    })
+        revokedReason: reason,
+      },
+    });
   }
 
   async getAllActiveSessions() {

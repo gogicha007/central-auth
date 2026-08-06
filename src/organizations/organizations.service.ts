@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MemberStatus, RoleNames } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -9,14 +13,13 @@ import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
 import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 
-
 @Injectable()
 export class OrganizationsService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly invitationService: InvitationsService,
     private readonly roleService: RolesService,
-  ) { }
+  ) {}
 
   async create(
     createOrganizationDto: CreateOrganizationDto,
@@ -81,24 +84,24 @@ export class OrganizationsService {
   async sendInvitation(data: SendInvitationRequestDto) {
     const role = await this.roleService.findByOrgId(
       data.organizationId,
-      data.roleName
+      data.roleName,
     );
 
     if (!role) {
       throw new NotFoundException(
-        `Role '${data.roleName}' does not exist in this organization, please create one and try again.`
+        `Role '${data.roleName}' does not exist in this organization, please create one and try again.`,
       );
     }
     return await this.invitationService.create({
       organizationId: data.organizationId,
       roleId: role.id,
       email: data.email,
-      createdByUserId: data.createdByUserId
-    })
+      createdByUserId: data.createdByUserId,
+    });
   }
 
   async acceptInvitation(token: string) {
-    return this.invitationService.acceptInvitation(token)
+    return this.invitationService.acceptInvitation(token);
   }
 
   async createRole(payload: CreateRoleDto) {
@@ -108,21 +111,22 @@ export class OrganizationsService {
   async updateMembershipRole(payload: UpdateMembershipRoleDto) {
     const role = await this.roleService.findByOrgId(
       payload.organizationId,
-      payload.roleName
+      payload.roleName,
     );
 
     if (!role) {
       throw new NotFoundException(
-        `Role '${payload.roleName}' does not exist in this organization, please create one and try again.`
+        `Role '${payload.roleName}' does not exist in this organization, please create one and try again.`,
       );
     }
     return await this.databaseService.organizationMember.update({
       where: {
-        id: payload.memberId
+        id: payload.memberId,
+        organizationId: payload.organizationId,
       },
       data: {
-        roleId: role.id
-      }
-    })
+        roleId: role.id,
+      },
+    });
   }
 }
