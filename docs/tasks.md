@@ -50,7 +50,7 @@
         [x] request from the frontent to verify token
         [x] request from the forntend to reset the password
 
-    [ ] password/change(authenticated)
+    [x] password/change(authenticated)
 
     AuthGuards
     [x] local strategy (validate email&password)
