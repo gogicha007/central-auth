@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAuditDto } from './dto/create-audit.dto';
-import { UpdateAuditDto } from './dto/update-audit.dto';
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class AuditService {
-  create(createAuditDto: CreateAuditDto) {
-    return 'This action adds a new audit';
+  constructor(private readonly dbService: DatabaseService) {}
+  async create(createAuditDto: CreateAuditDto) {
+    return await this.dbService.auditLog.create({
+      data: createAuditDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all audit`;
+  async findAll() {
+    return await this.dbService.auditLog.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} audit`;
+  async findOne(id: string) {
+    return await this.dbService.auditLog.findUnique({
+      where: { id },
+    });
   }
 
-  update(id: number, updateAuditDto: UpdateAuditDto) {
-    return `This action updates a #${id} audit`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} audit`;
+  async remove(id: string) {
+    return await this.dbService.auditLog.delete({
+      where: { id },
+    });
   }
 }

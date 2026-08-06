@@ -5,21 +5,22 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { TokenType, UserStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
+import { PasswordService } from '../common/password/password.service';
+import { SessionsService } from '../sessions/sessions.service';
+import { RedisService } from '../redis/redis.service';
+import { AuditService } from '../audit/audit.service';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserResponseDto } from './dto/create-user-response.dto';
+import { LoginDto } from '../auth/dto/login.dto';
+import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
+import { TokenType, UserStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
-import { LoginDto } from '../auth/dto/login.dto';
-import { PasswordService } from '../common/password/password.service';
-import { CreateUserResponseDto } from './dto/create-user-response.dto';
 import { blockedStatuses } from './constants';
-import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
-import { SessionsService } from '../sessions/sessions.service';
-import { RedisService } from '../redis/redis.service';
 import { getSessionCacheKey } from '../auth/auth-session-cache.util';
-import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +30,7 @@ export class UsersService {
     private readonly passwordService: PasswordService,
     private readonly sessionService: SessionsService,
     private readonly redisService: RedisService,
+    private readonly auditService: AuditService,
   ) {}
 
   async create(payload: CreateUserDto) {

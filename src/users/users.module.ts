@@ -5,6 +5,7 @@ import { DatabaseModule } from '../database/database.module';
 import { PasswordModule } from '../common/password/password.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { RedisModule } from '../redis/redis.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RedisModule } from '../redis/redis.module';
     PasswordModule,
     SessionsModule,
     RedisModule,
+    AuditModule,
   ],
   providers: [UsersService],
   exports: [UsersService],
