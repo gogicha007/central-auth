@@ -7,6 +7,7 @@ import { InvitationsService } from '../invitations/invitations.service';
 import { RolesService } from '../roles/roles.service';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
+import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 
 
 @Injectable()
@@ -85,7 +86,7 @@ export class OrganizationsService {
 
     if (!role) {
       throw new NotFoundException(
-        `Role '${data.roleName}' does not exist in this organization.`
+        `Role '${data.roleName}' does not exist in this organization, please create one and try again.`
       );
     }
     return await this.invitationService.create({
@@ -96,11 +97,32 @@ export class OrganizationsService {
     })
   }
 
-  async acceptInvitation(token: string){
-    return this.invitationService.acceptInvitation(token) 
+  async acceptInvitation(token: string) {
+    return this.invitationService.acceptInvitation(token)
   }
 
   async createRole(payload: CreateRoleDto) {
     return await this.roleService.create(payload);
+  }
+
+  async updateMembershipRole(payload: UpdateMembershipRoleDto) {
+    const role = await this.roleService.findByOrgId(
+      payload.organizationId,
+      payload.roleName
+    );
+
+    if (!role) {
+      throw new NotFoundException(
+        `Role '${payload.roleName}' does not exist in this organization, please create one and try again.`
+      );
+    }
+    return await this.databaseService.organizationMember.update({
+      where: {
+        id: payload.memberId
+      },
+      data: {
+        roleId: role.id
+      }
+    })
   }
 }

@@ -20,6 +20,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { RolesService } from '../roles/roles.service';
 import { RoleNames } from '@prisma/client';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
+import { UpdateMembershipRoleRequestDto } from './dto/update-membership-role';
 
 
 @UseGuards(JwtAuthGuard)
@@ -27,8 +28,7 @@ import type { AuthenticatedUserContext } from '../auth/auth.types';
 export class OrganizationsController {
   constructor(
     private readonly organizationsService: OrganizationsService,
-    private readonly rolesService: RolesService,
-  ) {}
+  ) { }
 
   @Post()
   create(
@@ -100,8 +100,19 @@ export class OrganizationsController {
     return this.organizationsService.createRole(payload);
   }
 
+  @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
   @Patch(':id/members/:memberId/role')
-  membershipRoles() {
-    return 'membership roles';
+  membershipRoles(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+    @Body() data: UpdateMembershipRoleRequestDto
+  ) {
+
+    return this.organizationsService.updateMembershipRole({
+      organizationId: id,
+      memberId,
+      roleName: data.roleName
+    })
   }
 }

@@ -71,15 +71,15 @@
     [x] update organizatoin
     [x] delete organization
 
-    [ ] Membership
-
-    [x] Invite member
-        [x] send invitation email to user
-            - request: organizations/:id/invitations, body {roleName, email}
-            - check if role exists in roles table
-            - send email link with query: organizationId, roleId, userId
-        [x] invitation accept
-            - create member record 
+    [x] Membership
+        [x] Invite member
+            [x] send invitation email to user
+                - request: organizations/:id/invitations, body {roleName, email}
+                - check if role exists in roles table
+                - send email link with query: organizationId, roleId, userId
+            [x] invitation accept
+                - create member record 
+        [x] update membership role 
 
 
 ## Roles module
