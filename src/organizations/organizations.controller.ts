@@ -133,9 +133,12 @@ export class OrganizationsController {
   @Delete(':id/members/:memberId')
   removeMember(
     @Param('id') id: string,
-    @Param('memberId') memberId: string
+    @Param('memberId') memberId: string,
+    @CurrentUser() user: AuthenticatedUserContext
   ) {
-    return this.organizationsService.deleteMember({ organizationId: id, memberId })
+    return this.organizationsService.deleteMember(
+      user.id,
+      { organizationId: id, organizationMemberId: memberId })
   }
 
 }

@@ -21,7 +21,7 @@ import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { blockedStatuses } from '../users/constants';
 import { ok } from '../common/utils/api-response.util';
-import { RoleDelegationValidator } from '../common/validators/role-delegation.validator';
+import { ROLE_HIERARCHY, RoleDelegationValidator } from '../common/validators/role-delegation.validator';
 
 @Injectable()
 export class OrganizationsService {
@@ -125,7 +125,7 @@ export class OrganizationsService {
   }
 
   async transferOrganizationOwnership(payload: TransferOrganizationOwnershipDto) {
-    const {organizationId, fromOwnerId, toOwnerId} = payload
+    const { organizationId, fromOwnerId, toOwnerId } = payload
     if (payload.fromOwnerId === payload.toOwnerId) throw new ConflictException('target owner is same as current')
 
     const targetUser = await this.usersService.findById(toOwnerId)
@@ -315,23 +315,67 @@ export class OrganizationsService {
     return updatedMember;
   }
 
-  async deleteMember(payload: DeleteOrgMemberDto) {
+  async deleteMember(actorUserId: string, payload: DeleteOrgMemberDto) {
+    const { organizationId, organizationMemberId } = payload
+
+    const actorMember = await this.databaseService.organizationMember.findFirst({
+      where: {
+        organizationId,
+        userId: actorUserId
+      },
+      include: {
+        role: true
+      }
+    })
+    if (!actorMember) throw new NotFoundException('action: deleteMember, target member not found')
+
+    const targetMember = await this.databaseService.organizationMember.findFirst({
+      where: {
+        organizationId,
+        id: organizationMemberId
+      },
+      include: {
+        role: true
+      }
+    })
+    if (!targetMember) throw new NotFoundException('action: deleteMember, target member not found')
+
+    const actorRank = ROLE_HIERARCHY[actorMember.role.name]
+    const targetRank = ROLE_HIERARCHY[targetMember.role.name]
+
+    if (targetRank > actorRank) {
+      throw new ForbiddenException(
+        `You cannot modify members with higher roles (${targetMember.role.name}).`
+      )
+    }
+
+    if (targetMember.role.name === RoleNames.OWNER) {
+      const targetOwnerCount = await this.databaseService.organizationMember.count({
+        where: {
+          organizationId,
+          roleId: targetMember.roleId,
+        }
+      })
+
+      if (targetOwnerCount === 1) {
+        throw new ForbiddenException('You must leave at least one owner')
+      }
+    }
+
     const removedMember = await this.databaseService.organizationMember.delete({
       where: {
-        organizationId: payload.organizationId,
-        id: payload.memberId
+        id: organizationMemberId
       }
     })
 
     await this.createAuditLog(AuditAction.MEMBER_REMOVED, {
-      organizationId: payload.organizationId,
+      organizationId: organizationId,
       resource: ResourceType.ORGANIZATION,
       resourceId: removedMember.id,
     });
 
     return removedMember
   }
-
 
   private async createAuditLog(
     action: AuditAction,
