@@ -1,20 +1,26 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { AuditAction, MemberStatus, ResourceType, RoleNames } from '@prisma/client';
-import { DatabaseService } from '../database/database.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { InvitationsService } from '../invitations/invitations.service';
-import { RolesService } from '../roles/roles.service';
-import { CreateRoleDto } from '../roles/dto/create-role.dto';
-import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
-import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 import { AuditService } from '../audit/audit.service';
+import { DatabaseService } from '../database/database.service';
+import { RolesService } from '../roles/roles.service';
+import { UsersService } from '../users/users.service';
 import { CreateAuditDto } from '../audit/dto/create-audit.dto';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { CreateRoleDto } from '../roles/dto/create-role.dto';
+import { DeleteOrgMemberDto } from './dto/delete-org-member.dto';
+import { InvitationsService } from '../invitations/invitations.service';
+import { SendInvitationRequestDto } from './dto/send-invitation-request.dto';
+import { TransferOrganizationOwnershipDto } from './dto/transfer-org-ownership.dto';
+import { UpdateMembershipRoleDto } from './dto/update-membership-role';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { blockedStatuses } from '../users/constants';
+import { ok } from '../common/utils/api-response.util';
 
 @Injectable()
 export class OrganizationsService {
@@ -25,7 +31,8 @@ export class OrganizationsService {
     private readonly invitationService: InvitationsService,
     private readonly roleService: RolesService,
     private readonly auditService: AuditService,
-  ) {}
+    private readonly usersService: UsersService
+  ) { }
 
   async create(
     createOrganizationDto: CreateOrganizationDto,
@@ -115,6 +122,108 @@ export class OrganizationsService {
     return deletedOrganization;
   }
 
+  async transferOrganizationOwnership(payload: TransferOrganizationOwnershipDto) {
+    if (payload.fromOwnerId === payload.toOwnerId) throw new ConflictException('target owner is same as current')
+
+    const targetUser = await this.usersService.findById(payload.toOwnerId)
+    if (!targetUser) throw new NotFoundException('target owner not found')
+    if (blockedStatuses.includes(targetUser.status)) throw new ForbiddenException('target user is not active')
+
+    await this.databaseService.$transaction(async (tx) => {
+      const ownerRole = await tx.role.findUnique({
+        where: {
+          organizationId_name: {
+            organizationId: payload.organizationId,
+            name: RoleNames.OWNER,
+          },
+        },
+        select: { id: true },
+      })
+
+      if (!ownerRole) {
+        throw new NotFoundException('current owner role not found in that org')
+      }
+
+      const currentOwnerMember = await tx.organizationMember.findFirst({
+        where: {
+          organizationId: payload.organizationId,
+          userId: payload.fromOwnerId,
+          roleId: ownerRole.id,
+          status: MemberStatus.ACTIVE,
+        },
+        select: { id: true },
+      })
+
+      if (!currentOwnerMember) {
+        throw new ForbiddenException('current user is not an active owner of this organization')
+      }
+
+      //upsert new owner
+      await tx.organizationMember.upsert({
+        where: {
+          organizationId_userId: {
+            organizationId: payload.organizationId,
+            userId: payload.toOwnerId
+          }
+        },
+        update: {
+          roleId: ownerRole.id,
+          status: MemberStatus.ACTIVE
+        },
+        create: {
+          organizationId: payload.organizationId,
+          userId: payload.toOwnerId,
+          roleId: ownerRole.id,
+          status: MemberStatus.ACTIVE
+        }
+      })
+
+      //check if admin role exists for that organization 
+      let adminRole = await tx.role.findUnique({
+        where: {
+          organizationId_name: {
+            organizationId: payload.organizationId,
+            name: RoleNames.ADMIN,
+          },
+        },
+      })
+
+      if (!adminRole) {
+        adminRole = await tx.role.create({
+          data: {
+            organizationId: payload.organizationId,
+            name: RoleNames.ADMIN,
+            description: 'Admin for organization'
+          }
+        })
+      }
+
+      await tx.organizationMember.update({
+        where: {
+          organizationId_userId: {
+            organizationId: payload.organizationId,
+            userId: payload.fromOwnerId
+          }
+        },
+        data: {
+          roleId: adminRole.id
+        }
+      })
+    })
+
+    await this.createAuditLog(AuditAction.ORGANIZATION_TRANSFERRED, {
+      organizationId: payload.organizationId,
+      userId: payload.fromOwnerId,
+      resource: ResourceType.ORGANIZATION,
+      resourceId: payload.organizationId,
+      metadata: {
+        fromOwnerId: payload.fromOwnerId,
+        toOwnerId: payload.toOwnerId
+      }
+    })
+     return ok('Ownership transferred successfully')
+  }
+
   async sendInvitation(data: SendInvitationRequestDto) {
     const role = await this.roleService.findByOrgId(
       data.organizationId,
@@ -174,6 +283,24 @@ export class OrganizationsService {
 
     return updatedMember;
   }
+
+  async deleteMember(payload: DeleteOrgMemberDto) {
+    const removedMember = await this.databaseService.organizationMember.delete({
+      where: {
+        organizationId: payload.organizationId,
+        id: payload.memberId
+      }
+    })
+
+    await this.createAuditLog(AuditAction.MEMBER_REMOVED, {
+      organizationId: removedMember.id,
+      resource: ResourceType.ORGANIZATION,
+      resourceId: removedMember.id,
+    });
+
+    return removedMember
+  }
+
 
   private async createAuditLog(
     action: AuditAction,

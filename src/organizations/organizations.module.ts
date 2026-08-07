@@ -7,10 +7,17 @@ import { InvitationsModule } from '../invitations/invitations.module';
 import { RolesModule } from '../roles/roles.module';
 import { RolesService } from '../roles/roles.service';
 import { AuditModule } from '../audit/audit.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [AuthModule, DatabaseModule, InvitationsModule, RolesModule, AuditModule],
+  imports: [
+    AuditModule, 
+    AuthModule, 
+    DatabaseModule, 
+    InvitationsModule, 
+    RolesModule, 
+    UsersModule],
   controllers: [OrganizationsController],
   providers: [OrganizationsService, RolesService],
 })
-export class OrganizationsModule {}
+export class OrganizationsModule { }

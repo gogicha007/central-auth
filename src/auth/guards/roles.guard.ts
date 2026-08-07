@@ -13,7 +13,7 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly db: DatabaseService,
+    private readonly dbService: DatabaseService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -52,7 +52,7 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    const member = await this.db.organizationMember.findFirst({
+    const member = await this.dbService.organizationMember.findFirst({
       where: {
         userId,
         organizationId,

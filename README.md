@@ -212,6 +212,7 @@ Delegation rules
 - DIRECTOR, EMPLOYEE, VIEWER
   - no membership-management authority by default
 
+
 Endpoints
 
 - Create onganization - {POST} organizations/

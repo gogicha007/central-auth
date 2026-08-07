@@ -24,7 +24,7 @@ import { UpdateMembershipRoleRequestDto } from './dto/update-membership-role';
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) {}
+  constructor(private readonly organizationsService: OrganizationsService) { }
 
   @Post()
   create(
@@ -65,6 +65,22 @@ export class OrganizationsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.organizationsService.remove(id);
+  }
+
+  @Roles('OWNER')
+  @UseGuards(RolesGuard)
+  @Post(':id/transfer')
+  transferOwnership(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUserContext,
+    @Body() data: { toOwnerId: string }
+  ) {
+    const payload = {
+      organizationId: id,
+      fromOwnerId: user.id,
+      toOwnerId: data.toOwnerId
+    }
+    return this.organizationsService.transferOrganizationOwnership(payload)
   }
 
   @Roles('OWNER', 'ADMIN')
@@ -110,4 +126,15 @@ export class OrganizationsController {
       roleName: data.roleName,
     });
   }
+
+  @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
+  @Delete(':id/members/:memberId')
+  removeMember(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string
+  ) {
+    return this.organizationsService.deleteMember({ organizationId: id, memberId })
+  }
+
 }
