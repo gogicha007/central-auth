@@ -1,4 +1,3 @@
-// src/common/utils/role-delegation.validator.ts
 import { ForbiddenException, BadRequestException } from '@nestjs/common';
 
 export const ROLE_HIERARCHY: Record<string, number> = {
@@ -12,50 +11,100 @@ export const ROLE_HIERARCHY: Record<string, number> = {
 
 export interface RoleDelegationContext {
   actorRole: string;
-  targetCurrentRole: string;
+  targetRole: string;
   requestedRole: string;
+  isPlatformAdmin?: boolean;
 }
 
+export interface RoleActionContext {
+  actorRole: string;
+  targetRole: string;
+  isPlatformAdmin?: boolean
+}
 export class RoleDelegationValidator {
   static assertCanManageRole(context: RoleDelegationContext): void {
-    const { actorRole, targetCurrentRole, requestedRole } = context;
+    const { actorRole, targetRole, requestedRole, isPlatformAdmin = false } = context;
+
+    if (isPlatformAdmin) return
 
     const actorRank = ROLE_HIERARCHY[actorRole];
-    const targetCurrentRank = ROLE_HIERARCHY[targetCurrentRole];
+    const targetRank = ROLE_HIERARCHY[targetRole];
     const requestedRank = ROLE_HIERARCHY[requestedRole];
 
-    // 1. Validate presence in hierarchy
-    if (!actorRank || !targetCurrentRank || !requestedRank) {
+    if (!actorRank || !targetRank || !requestedRank) {
       throw new BadRequestException('Unmapped or invalid role in hierarchy.');
     }
 
-    // 2. Prevent no-op role assignments
-    if (targetCurrentRole === requestedRole) {
+    if (targetRole === requestedRole) {
       throw new BadRequestException(`Member already holds the '${requestedRole}' role.`);
     }
 
-    // 3. OWNER bypasses delegation constraints
-    if (actorRole === 'OWNER') {
-      return;
-    }
+    if (actorRole === 'OWNER') return;
 
-    // 4. Non-owners cannot grant OWNER
     if (requestedRole === 'OWNER') {
       throw new ForbiddenException('Only the current OWNER can grant or transfer ownership.');
     }
 
-    // 5. Cannot modify members with equal or higher rank
-    if (targetCurrentRank >= actorRank) {
+    if (targetRank >= actorRank) {
       throw new ForbiddenException(
-        `You cannot modify members with equal or higher roles (${targetCurrentRole}).`
+        `You cannot modify members with equal or higher roles (${targetRole}).`
       );
     }
 
-    // 6. Cannot assign a role equal to or higher than your own
     if (requestedRank >= actorRank) {
       throw new ForbiddenException(
         `You can only assign roles strictly below your current rank (${actorRole}).`
       );
     }
   }
+
+  static assertCanRemoveMember(context: RoleActionContext): void {
+    const { actorRole, targetRole, isPlatformAdmin = false } = context;
+
+    if (isPlatformAdmin) return;
+
+    const actorRank = ROLE_HIERARCHY[actorRole];
+    const targetRank = ROLE_HIERARCHY[targetRole];
+
+    if (!actorRank || !targetRank) {
+      throw new BadRequestException('Unmapped or invalid role in hierarchy.');
+    }
+
+    if (actorRole === 'OWNER') return;
+
+    if (targetRank >= actorRank) {
+      throw new ForbiddenException(
+        `You cannot remove members with equal or higher roles (${targetRole}).`
+      );
+    }
+  }
+
+  static assertCanInviteRole(
+    actorRole: string,
+    invitedRole: string,
+    isPlatformAdmin = false
+  ): void {
+    if (isPlatformAdmin) return
+
+    const actorRank = ROLE_HIERARCHY[actorRole]
+    const invitedRank = ROLE_HIERARCHY[invitedRole]
+
+    if (!actorRank || !invitedRole) {
+      throw new BadRequestException('Unmapped or invalid role in hierarchy')
+    }
+
+    if (actorRole === 'OWNER') return
+
+    if (invitedRole === 'OWNER') {
+      throw new ForbiddenException('Only the current OWNER can invite a new OWNER.');
+    }
+
+    if (invitedRank >= actorRank) {
+      throw new ForbiddenException(
+        `You can only invite roles strictly below your current rank (${actorRole}).`
+      );
+    }
+  }
+
+
 }

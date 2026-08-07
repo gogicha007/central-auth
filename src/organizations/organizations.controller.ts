@@ -83,7 +83,6 @@ export class OrganizationsController {
     return this.organizationsService.transferOrganizationOwnership(payload)
   }
 
-  @Roles('OWNER', 'ADMIN')
   @UseGuards(RolesGuard)
   @Post(':id/invitations')
   orgInvitacions(
@@ -91,6 +90,7 @@ export class OrganizationsController {
     @Param('id') organizationId: string,
     @Body() { roleName, email }: { roleName: RoleNames; email: string },
   ) {
+
     return this.organizationsService.sendInvitation({
       organizationId,
       email,
@@ -117,13 +117,13 @@ export class OrganizationsController {
   @Patch(':id/members/:memberId/role')
   membershipRoles(
     @Param('id') id: string,
-    @Param('memberId') memberId: string,
+    @Param('memberId') organizationMemberId: string,
     @CurrentUser() user: AuthenticatedUserContext,
     @Body() data: UpdateMembershipRoleRequestDto,
   ) {
-    return this.organizationsService.updateMembershipRole(user.id, {
+    return this.organizationsService.updateMembershipRole(user, {
       organizationId: id,
-      memberId,
+      organizationMemberId,
       roleName: data.roleName,
     });
   }
@@ -137,7 +137,7 @@ export class OrganizationsController {
     @CurrentUser() user: AuthenticatedUserContext
   ) {
     return this.organizationsService.deleteMember(
-      user.id,
+      user,
       { organizationId: id, organizationMemberId: memberId })
   }
 

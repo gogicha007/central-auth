@@ -172,8 +172,7 @@ Authorization matrix
 
 - Accept invitation:
   - invited user with valid token
-  - no org role required yet
-  - authenticated flow
+  - no org role required
 
 - Change member role:
   - OWNER

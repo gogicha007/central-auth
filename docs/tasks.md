@@ -167,3 +167,60 @@ Audit Actions
     [ ] MFA_DISABLED
     [ ] ACCOUNT_LOCKED
     [ ] ACCOUNT_UNLOCKED
+
+
+## Authorization matrix
+
+[x] Create organization:
+    [x] authenticated user
+    [x] platform admin
+
+[ ] View own organization:
+    [ ] any active member of that organization
+    [ ] platform admin
+
+[ ] Update organization profile:
+    [ ] OWNER, ADMIN
+    [ ] platform admin
+
+[ ] Invite member:
+    [ ] OWNER, ADMIN
+    [ ] platform admin
+
+
+- Change member role:
+  - OWNER
+  - ADMIN only for lower roles
+  - platform admin
+
+- Remove member:
+  - OWNER
+  - ADMIN for non-owner members
+  - platform admin
+
+- Delete organization:
+  - OWNER
+  - platform admin
+
+- Transfer ownership:
+  - OWNER
+  - platform admin
+
+Delegation rules
+
+- OWNER
+  - can assign ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - can transfer ownership
+  - can delete org
+
+- ADMIN
+  - can assign MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - cannot assign OWNER
+  - cannot remove current OWNER
+
+- MANAGER
+  - can invite EMPLOYEE and VIEWER
+  - cannot assign ADMIN
+
+- DIRECTOR, EMPLOYEE, VIEWER
+  - no membership-management authority by default

@@ -8,5 +8,5 @@ export class UpdateMembershipRoleRequestDto {
 
 export class UpdateMembershipRoleDto extends UpdateMembershipRoleRequestDto {
   organizationId!: string;
-  memberId!: string;
+  organizationMemberId!: string;
 }

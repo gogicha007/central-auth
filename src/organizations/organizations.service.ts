@@ -22,6 +22,7 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { blockedStatuses } from '../users/constants';
 import { ok } from '../common/utils/api-response.util';
 import { ROLE_HIERARCHY, RoleDelegationValidator } from '../common/validators/role-delegation.validator';
+import { AuthenticatedUserContext } from '../auth/auth.types';
 
 @Injectable()
 export class OrganizationsService {
@@ -241,6 +242,9 @@ export class OrganizationsService {
         `Role '${data.roleName}' does not exist in this organization, please create one and try again.`,
       );
     }
+
+    //to-do role delegation
+    
     return await this.invitationService.create({
       organizationId: data.organizationId,
       roleId: role.id,
@@ -258,10 +262,9 @@ export class OrganizationsService {
   }
 
   async updateMembershipRole(
-    actorUserId: string,
+    actorUser: AuthenticatedUserContext,
     payload: UpdateMembershipRoleDto) {
-
-    const { organizationId, memberId, roleName } = payload
+    const { organizationId, organizationMemberId, roleName } = payload
 
     const targetRole = await this.roleService.findByOrgId(organizationId, roleName)
     if (!targetRole) {
@@ -272,59 +275,50 @@ export class OrganizationsService {
 
     const [actorMember, targetMember] = await Promise.all([
       this.databaseService.organizationMember.findUnique({
-        where: { organizationId_userId: { organizationId, userId: actorUserId } },
+        where: { organizationId_userId: { organizationId, userId: actorUser.id } },
         include: { role: true }
       }),
       this.databaseService.organizationMember.findFirst({
-        where: { id: memberId, organizationId },
+        where: { id: organizationMemberId, organizationId },
         include: { role: true }
       })
     ])
 
-    if (!actorMember) {
-      throw new ForbiddenException('You are not a member of this organization')
-    }
-
-    if (!targetMember) {
-      throw new NotFoundException('Target organization member nod found')
-    }
+    if (!actorMember) throw new ForbiddenException('You are not a member of this organization')
+    if (!targetMember) throw new NotFoundException('Target organization member nod found')
 
     RoleDelegationValidator.assertCanManageRole({
       actorRole: actorMember.role.name,
-      targetCurrentRole: targetMember.role.name,
-      requestedRole: targetRole.name
+      targetRole: targetMember.role.name,
+      requestedRole: targetRole.name,
+      isPlatformAdmin: actorUser.isPlatformAdmin
     })
-
 
     const updatedMember = await this.databaseService.organizationMember.update({
       where: {
-        id: payload.memberId,
-        organizationId: payload.organizationId,
+        id: organizationMemberId,
+        organizationId: organizationId,
       },
-      data: {
-        roleId: targetRole.id,
-      },
+      data: { roleId: targetRole.id },
     });
 
     await this.createAuditLog(AuditAction.ROLE_ASSIGNED, {
-      organizationId: payload.organizationId,
+      organizationId: organizationId,
       resource: ResourceType.ROLE,
       resourceId: targetRole.id,
-      metadata: {
-        memberId: payload.memberId,
-      },
+      metadata: { organizationMemberId },
     });
 
     return updatedMember;
   }
 
-  async deleteMember(actorUserId: string, payload: DeleteOrgMemberDto) {
+  async deleteMember(actorUser: AuthenticatedUserContext, payload: DeleteOrgMemberDto) {
     const { organizationId, organizationMemberId } = payload
 
     const actorMember = await this.databaseService.organizationMember.findFirst({
       where: {
         organizationId,
-        userId: actorUserId
+        userId: actorUser.id
       },
       include: {
         role: true
@@ -343,14 +337,11 @@ export class OrganizationsService {
     })
     if (!targetMember) throw new NotFoundException('action: deleteMember, target member not found')
 
-    const actorRank = ROLE_HIERARCHY[actorMember.role.name]
-    const targetRank = ROLE_HIERARCHY[targetMember.role.name]
-
-    if (targetRank > actorRank) {
-      throw new ForbiddenException(
-        `You cannot modify members with higher roles (${targetMember.role.name}).`
-      )
-    }
+    RoleDelegationValidator.assertCanRemoveMember({
+      actorRole: actorMember.role.name,
+      targetRole: targetMember.role.name,
+      isPlatformAdmin: actorUser.isPlatformAdmin,
+    });
 
     if (targetMember.role.name === RoleNames.OWNER) {
       const targetOwnerCount = await this.databaseService.organizationMember.count({
