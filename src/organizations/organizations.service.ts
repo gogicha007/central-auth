@@ -81,8 +81,11 @@ export class OrganizationsService {
       });
 
       return organization;
-    } catch {
-      throw new ConflictException('Organization name or slug already exists');
+    } catch (error: unknown) {
+      if (error instanceof ConflictException) {
+        throw new ConflictException('Organization name or slug already exists');
+      }
+      throw error
     }
 
   }

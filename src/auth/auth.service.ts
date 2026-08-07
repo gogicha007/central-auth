@@ -186,10 +186,10 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        throw error;
+        throw new UnauthorizedException('Invalid refresh token');
       }
-
-      throw new UnauthorizedException('Invalid refresh token');
+      
+      throw error;
     }
   }
 
