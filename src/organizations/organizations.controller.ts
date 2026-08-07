@@ -118,9 +118,10 @@ export class OrganizationsController {
   membershipRoles(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
+    @CurrentUser() user: AuthenticatedUserContext,
     @Body() data: UpdateMembershipRoleRequestDto,
   ) {
-    return this.organizationsService.updateMembershipRole({
+    return this.organizationsService.updateMembershipRole(user.id, {
       organizationId: id,
       memberId,
       roleName: data.roleName,

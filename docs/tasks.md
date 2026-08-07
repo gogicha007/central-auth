@@ -97,6 +97,7 @@
 
     [x] create user
     [ ] update user
+    [ ] get all users
 
 ## Mail module
 

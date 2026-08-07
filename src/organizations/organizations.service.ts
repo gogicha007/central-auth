@@ -21,6 +21,7 @@ import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { blockedStatuses } from '../users/constants';
 import { ok } from '../common/utils/api-response.util';
+import { RoleDelegationValidator } from '../common/validators/role-delegation.validator';
 
 @Injectable()
 export class OrganizationsService {
@@ -83,10 +84,11 @@ export class OrganizationsService {
     } catch {
       throw new ConflictException('Organization name or slug already exists');
     }
+
   }
 
-  findAll() {
-    return this.databaseService.organization.findMany();
+  async findAll() {
+    return await this.databaseService.organization.findMany();
   }
 
   findOne(id: string) {
@@ -123,9 +125,10 @@ export class OrganizationsService {
   }
 
   async transferOrganizationOwnership(payload: TransferOrganizationOwnershipDto) {
+    const {organizationId, fromOwnerId, toOwnerId} = payload
     if (payload.fromOwnerId === payload.toOwnerId) throw new ConflictException('target owner is same as current')
 
-    const targetUser = await this.usersService.findById(payload.toOwnerId)
+    const targetUser = await this.usersService.findById(toOwnerId)
     if (!targetUser) throw new NotFoundException('target owner not found')
     if (blockedStatuses.includes(targetUser.status)) throw new ForbiddenException('target user is not active')
 
@@ -133,7 +136,7 @@ export class OrganizationsService {
       const ownerRole = await tx.role.findUnique({
         where: {
           organizationId_name: {
-            organizationId: payload.organizationId,
+            organizationId: organizationId,
             name: RoleNames.OWNER,
           },
         },
@@ -146,8 +149,8 @@ export class OrganizationsService {
 
       const currentOwnerMember = await tx.organizationMember.findFirst({
         where: {
-          organizationId: payload.organizationId,
-          userId: payload.fromOwnerId,
+          organizationId: organizationId,
+          userId: fromOwnerId,
           roleId: ownerRole.id,
           status: MemberStatus.ACTIVE,
         },
@@ -162,8 +165,8 @@ export class OrganizationsService {
       await tx.organizationMember.upsert({
         where: {
           organizationId_userId: {
-            organizationId: payload.organizationId,
-            userId: payload.toOwnerId
+            organizationId: organizationId,
+            userId: toOwnerId
           }
         },
         update: {
@@ -171,8 +174,8 @@ export class OrganizationsService {
           status: MemberStatus.ACTIVE
         },
         create: {
-          organizationId: payload.organizationId,
-          userId: payload.toOwnerId,
+          organizationId: organizationId,
+          userId: toOwnerId,
           roleId: ownerRole.id,
           status: MemberStatus.ACTIVE
         }
@@ -182,7 +185,7 @@ export class OrganizationsService {
       let adminRole = await tx.role.findUnique({
         where: {
           organizationId_name: {
-            organizationId: payload.organizationId,
+            organizationId: organizationId,
             name: RoleNames.ADMIN,
           },
         },
@@ -191,7 +194,7 @@ export class OrganizationsService {
       if (!adminRole) {
         adminRole = await tx.role.create({
           data: {
-            organizationId: payload.organizationId,
+            organizationId: organizationId,
             name: RoleNames.ADMIN,
             description: 'Admin for organization'
           }
@@ -201,8 +204,8 @@ export class OrganizationsService {
       await tx.organizationMember.update({
         where: {
           organizationId_userId: {
-            organizationId: payload.organizationId,
-            userId: payload.fromOwnerId
+            organizationId: organizationId,
+            userId: fromOwnerId
           }
         },
         data: {
@@ -212,16 +215,16 @@ export class OrganizationsService {
     })
 
     await this.createAuditLog(AuditAction.ORGANIZATION_TRANSFERRED, {
-      organizationId: payload.organizationId,
-      userId: payload.fromOwnerId,
+      organizationId: organizationId,
+      userId: fromOwnerId,
       resource: ResourceType.ORGANIZATION,
-      resourceId: payload.organizationId,
+      resourceId: organizationId,
       metadata: {
-        fromOwnerId: payload.fromOwnerId,
-        toOwnerId: payload.toOwnerId
+        fromOwnerId: fromOwnerId,
+        toOwnerId: toOwnerId
       }
     })
-     return ok('Ownership transferred successfully')
+    return ok('Ownership transferred successfully')
   }
 
   async sendInvitation(data: SendInvitationRequestDto) {
@@ -251,31 +254,59 @@ export class OrganizationsService {
     return await this.roleService.create(payload);
   }
 
-  async updateMembershipRole(payload: UpdateMembershipRoleDto) {
-    const role = await this.roleService.findByOrgId(
-      payload.organizationId,
-      payload.roleName,
-    );
+  async updateMembershipRole(
+    actorUserId: string,
+    payload: UpdateMembershipRoleDto) {
 
-    if (!role) {
+    const { organizationId, memberId, roleName } = payload
+
+    const targetRole = await this.roleService.findByOrgId(organizationId, roleName)
+    if (!targetRole) {
       throw new NotFoundException(
-        `Role '${payload.roleName}' does not exist in this organization, please create one and try again.`,
+        `Role '${roleName}' does not exist in this organization, please create one and try again.`,
       );
     }
+
+    const [actorMember, targetMember] = await Promise.all([
+      this.databaseService.organizationMember.findUnique({
+        where: { organizationId_userId: { organizationId, userId: actorUserId } },
+        include: { role: true }
+      }),
+      this.databaseService.organizationMember.findFirst({
+        where: { id: memberId, organizationId },
+        include: { role: true }
+      })
+    ])
+
+    if (!actorMember) {
+      throw new ForbiddenException('You are not a member of this organization')
+    }
+
+    if (!targetMember) {
+      throw new NotFoundException('Target organization member nod found')
+    }
+
+    RoleDelegationValidator.assertCanManageRole({
+      actorRole: actorMember.role.name,
+      targetCurrentRole: targetMember.role.name,
+      requestedRole: targetRole.name
+    })
+
+
     const updatedMember = await this.databaseService.organizationMember.update({
       where: {
         id: payload.memberId,
         organizationId: payload.organizationId,
       },
       data: {
-        roleId: role.id,
+        roleId: targetRole.id,
       },
     });
 
     await this.createAuditLog(AuditAction.ROLE_ASSIGNED, {
       organizationId: payload.organizationId,
       resource: ResourceType.ROLE,
-      resourceId: role.id,
+      resourceId: targetRole.id,
       metadata: {
         memberId: payload.memberId,
       },
@@ -293,7 +324,7 @@ export class OrganizationsService {
     })
 
     await this.createAuditLog(AuditAction.MEMBER_REMOVED, {
-      organizationId: removedMember.id,
+      organizationId: payload.organizationId,
       resource: ResourceType.ORGANIZATION,
       resourceId: removedMember.id,
     });
