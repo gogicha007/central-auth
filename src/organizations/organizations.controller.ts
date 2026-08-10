@@ -91,7 +91,7 @@ export class OrganizationsController {
     @Body() { roleName, email }: { roleName: RoleNames; email: string },
   ) {
 
-    return this.organizationsService.sendInvitation({
+    return this.organizationsService.sendInvitation(user, {
       organizationId,
       email,
       roleName,

@@ -175,9 +175,9 @@ Audit Actions
     [x] authenticated user
     [x] platform admin
 
-[ ] View own organization:
-    [ ] any active member of that organization
-    [ ] platform admin
+[x] View own organization:
+    [x] any active member of that organization
+    [x] platform admin
 
 [ ] Update organization profile:
     [ ] OWNER, ADMIN

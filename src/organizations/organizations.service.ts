@@ -21,7 +21,7 @@ import { UpdateMembershipRoleDto } from './dto/update-membership-role';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { blockedStatuses } from '../users/constants';
 import { ok } from '../common/utils/api-response.util';
-import { ROLE_HIERARCHY, RoleDelegationValidator } from '../common/validators/role-delegation.validator';
+import { RoleDelegationValidator } from '../common/validators/role-delegation.validator';
 import { AuthenticatedUserContext } from '../auth/auth.types';
 
 @Injectable()
@@ -231,7 +231,22 @@ export class OrganizationsService {
     return ok('Ownership transferred successfully')
   }
 
-  async sendInvitation(data: SendInvitationRequestDto) {
+  async sendInvitation(actorUser: AuthenticatedUserContext, data: SendInvitationRequestDto) {
+
+    const actorRole = await this.databaseService.organizationMember.findFirst({
+      where: {
+        organizationId: data.organizationId,
+        userId: actorUser.id
+      },
+      include: {
+        role: true
+      }
+    })
+
+    if (!actorRole) throw new NotFoundException(
+      `Actor '${actorUser.email}' not found in organization members`,
+    )
+
     const role = await this.roleService.findByOrgId(
       data.organizationId,
       data.roleName,
@@ -243,8 +258,10 @@ export class OrganizationsService {
       );
     }
 
-    //to-do role delegation
-    
+    RoleDelegationValidator.assertCanInviteRole(
+      actorRole.role.name, data.roleName, actorUser.isPlatformAdmin
+    )
+
     return await this.invitationService.create({
       organizationId: data.organizationId,
       roleId: role.id,
