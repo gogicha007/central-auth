@@ -21,8 +21,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { RoleNames } from '@prisma/client';
 import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { UpdateMembershipRoleRequestDto } from './dto/update-membership-role';
+import { OrganizationGuard } from '../auth/guards/organization.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, OrganizationGuard)
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) { }

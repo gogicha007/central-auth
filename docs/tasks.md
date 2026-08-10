@@ -216,8 +216,8 @@ Delegation rules
   - cannot remove current OWNER
 
 - DIRECTOR
-  - can invite EMPLOYEE and VIEWER
+  - can invite MANAGER, EMPLOYEE and VIEWER
   - cannot assign ADMIN
 
-- DIRECTOR, EMPLOYEE, VIEWER
+- MANAGER, EMPLOYEE, VIEWER
   - no membership-management authority by default

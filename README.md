@@ -204,11 +204,11 @@ Delegation rules
   - cannot assign OWNER
   - cannot remove current OWNER
 
-- MANAGER
-  - can invite EMPLOYEE and VIEWER
+- DIRECTOR
+  - can invite MANAGER, EMPLOYEE and VIEWER
   - cannot assign ADMIN
 
-- DIRECTOR, EMPLOYEE, VIEWER
+- MANAGER, EMPLOYEE, VIEWER
   - no membership-management authority by default
 
 
