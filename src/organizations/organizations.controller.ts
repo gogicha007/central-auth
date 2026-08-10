@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -35,7 +36,8 @@ export class OrganizationsController {
   }
 
   @Get()
-  findAll() {
+  findAll(@CurrentUser() user: AuthenticatedUserContext) {
+    if (!user.isPlatformAdmin) throw new ForbiddenException()
     return this.organizationsService.findAll();
   }
 
@@ -45,6 +47,8 @@ export class OrganizationsController {
     return this.organizationsService.acceptInvitation(token);
   }
 
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'DIRECTOR', 'EMPLOYEE', 'VIEWER')
+  @UseGuards(RolesGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(id);
@@ -83,6 +87,7 @@ export class OrganizationsController {
     return this.organizationsService.transferOrganizationOwnership(payload)
   }
 
+  @Roles('OWNER', 'ADMIN', 'DIRECTOR')
   @UseGuards(RolesGuard)
   @Post(':id/invitations')
   orgInvitacions(

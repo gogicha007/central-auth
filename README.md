@@ -167,7 +167,7 @@ Authorization matrix
   - platform admin
 
 - Invite member:
-  - OWNER, ADMIN
+  - OWNER, ADMIN, DIRECTOR
   - platform admin
 
 - Accept invitation:

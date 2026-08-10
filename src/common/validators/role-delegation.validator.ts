@@ -3,9 +3,9 @@ import { ForbiddenException, BadRequestException } from '@nestjs/common';
 export const ROLE_HIERARCHY: Record<string, number> = {
   VIEWER: 1,
   EMPLOYEE: 2,
-  ADMIN: 3,
-  MANAGER: 4,
-  DIRECTOR: 5,
+  MANAGER: 3,
+  DIRECTOR: 4,
+  ADMIN: 5,
   OWNER: 6,
 };
 
@@ -89,7 +89,7 @@ export class RoleDelegationValidator {
     const actorRank = ROLE_HIERARCHY[actorRole]
     const invitedRank = ROLE_HIERARCHY[invitedRole]
 
-    if (!actorRank || !invitedRole) {
+    if (!actorRank || !invitedRank) {
       throw new BadRequestException('Unmapped or invalid role in hierarchy')
     }
 
@@ -105,6 +105,4 @@ export class RoleDelegationValidator {
       );
     }
   }
-
-
 }

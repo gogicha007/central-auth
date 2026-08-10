@@ -179,24 +179,21 @@ Audit Actions
     [x] any active member of that organization
     [x] platform admin
 
-[ ] Update organization profile:
-    [ ] OWNER, ADMIN
-    [ ] platform admin
+[x] Update organization profile:
+    [x] OWNER, ADMIN
+    [x] platform admin
 
-[ ] Invite member:
-    [ ] OWNER, ADMIN
-    [ ] platform admin
+[x] Invite member:
+    [x] OWNER, ADMIN, DIRECTOR
+    [x] platform admin
 
+[x] Change(update) member role:
+    [x] OWNER, ADMIN only for lower roles
+    [x] - platform admin
 
-- Change member role:
-  - OWNER
-  - ADMIN only for lower roles
-  - platform admin
-
-- Remove member:
-  - OWNER
-  - ADMIN for non-owner members
-  - platform admin
+[x] Remove member:
+    [x] OWNER, ADMIN for non-owner members
+    [x] platform admin
 
 - Delete organization:
   - OWNER
@@ -218,7 +215,7 @@ Delegation rules
   - cannot assign OWNER
   - cannot remove current OWNER
 
-- MANAGER
+- DIRECTOR
   - can invite EMPLOYEE and VIEWER
   - cannot assign ADMIN
 
