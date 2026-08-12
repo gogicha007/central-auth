@@ -4,6 +4,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { CreatePermissionDto } from './dto/create-permission.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('roles')
@@ -19,16 +20,21 @@ export class RolesController {
 
   @Roles('OWNER', 'ADMIN')
   @Post(':id/permissions')
-  createPermission(@Param('id') roleId: string) {
-    console.log('create permission')
+  createPermission(
+    @Param('id') roleId: string,
+    @Body() payload: CreatePermissionDto
+  ) {
+    return this.rolesService.createPermission(roleId, payload)
+
   }
   @Roles('OWNER', 'ADMIN')
   @Patch(':id/permissions/:permissionId')
   updatePermission(
     @Param('id') roleId: string,
     @Param('permissionId') permissionId: string) {
-    console.log('update permission ')
+    console.log('update permission')
   }
+
   @Roles('OWNER', 'ADMIN')
   @Delete(':id/permissions/:permissionId')
   deletePermission(
@@ -37,6 +43,4 @@ export class RolesController {
   ) {
     console.log('delete permission')
   }
-
-
 }

@@ -5,6 +5,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { AuditAction, ResourceType, RoleNames } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { CreateAuditDto } from '../audit/dto/create-audit.dto';
+import { CreatePermissionDto } from './dto/create-permission.dto';
 
 @Injectable()
 export class RolesService {
@@ -13,7 +14,7 @@ export class RolesService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async create(data: CreateRoleDto) {
     const role = await this.dbService.role.create({
@@ -79,5 +80,17 @@ export class RolesService {
     } catch (error) {
       this.logger.warn('Audit write failed', { action, error });
     }
+  }
+
+  async createPermission(roleId: string, data: CreatePermissionDto) {
+    console.log('roleid', roleId, ' ', 'data', ' ', data)
+  }
+
+  async updatePermission() {
+
+  }
+
+  async deletePermission() {
+
   }
 }
