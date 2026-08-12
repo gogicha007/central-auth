@@ -10,6 +10,8 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RedisModule } from '../redis/redis.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
+import { OrganizationGuard } from './guards/organization.guard';
 import { AuditModule } from '../audit/audit.module';
 
 @Module({
@@ -19,7 +21,7 @@ import { AuditModule } from '../audit/audit.module';
     RedisModule,
     SessionsModule,
     UsersModule,
-    AuditModule
+    AuditModule,
   ],
   providers: [
     AuthService,
@@ -27,8 +29,10 @@ import { AuditModule } from '../audit/audit.module';
     JwtStrategy,
     JwtService,
     JwtAuthGuard,
+    OrganizationGuard,
+    PermissionsGuard,
   ],
   controllers: [AuthController],
-  exports: [JwtAuthGuard],
+  exports: [JwtAuthGuard, OrganizationGuard, PermissionsGuard],
 })
 export class AuthModule {}
