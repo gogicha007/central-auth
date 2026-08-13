@@ -1,11 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { AuditAction, ResourceType, RoleNames } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { CreateAuditDto } from '../audit/dto/create-audit.dto';
-import { CreatePermissionDto } from './dto/create-permission.dto';
 
 @Injectable()
 export class RolesService {
@@ -82,15 +81,47 @@ export class RolesService {
     }
   }
 
-  async createPermission(roleId: string, data: CreatePermissionDto) {
-    console.log('roleid', roleId, ' ', 'data', ' ', data)
+  async assignPermission(roleId: string, permissionId: string) {
+    const [role, permission] = await Promise.all([
+      this.dbService.role.findUnique({ where: { id: roleId } }),
+      this.dbService.permission.findUnique({ where: { id: permissionId } }),
+    ]);
+
+    if (!role) throw new NotFoundException(`Role '${roleId}' not found`);
+    if (!permission)
+      throw new NotFoundException(`Permission '${permissionId}' not found`);
+
+    const rolePermission = await this.dbService.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId, permissionId } },
+      update: {},
+      create: { roleId, permissionId },
+    });
+
+    await this.createAuditLog(AuditAction.PERMISSION_GRANTED, {
+      organizationId: role.organizationId,
+      resource: ResourceType.PERMISSION,
+      resourceId: permissionId,
+      metadata: { roleId },
+    });
+
+    return rolePermission;
   }
 
-  async updatePermission() {
+  async removePermission(roleId: string, permissionId: string) {
+    const role = await this.dbService.role.findUnique({
+      where: { id: roleId },
+    });
+    if (!role) throw new NotFoundException(`Role '${roleId}' not found`);
 
-  }
+    await this.dbService.rolePermission.delete({
+      where: { roleId_permissionId: { roleId, permissionId } },
+    });
 
-  async deletePermission() {
-
+    await this.createAuditLog(AuditAction.PERMISSION_REVOKED, {
+      organizationId: role.organizationId,
+      resource: ResourceType.PERMISSION,
+      resourceId: permissionId,
+      metadata: { roleId },
+    });
   }
 }
