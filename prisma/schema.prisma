@@ -34,6 +34,7 @@ model User {
   updatedAt           DateTime             @updatedAt @map("updated_at")
   lastLoginAt         DateTime?            @map("last_login_at")
   failedLoginCount    Int                  @default(0)
+  lockedAt            DateTime?            @map("locked_at")
   organizationMembers OrganizationMember[]
   sessions            Session[]
   auditLogs           AuditLog[]

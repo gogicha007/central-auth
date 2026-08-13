@@ -165,8 +165,8 @@ Audit Actions
 
     [ ] MFA_ENABLED
     [ ] MFA_DISABLED
-    [ ] ACCOUNT_LOCKED
-    [ ] ACCOUNT_UNLOCKED
+    [x] ACCOUNT_LOCKED
+    [x] ACCOUNT_UNLOCKED
 
 
 ## Authorization matrix
