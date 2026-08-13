@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { OrganizationGuard } from './guards/organization.guard';
 import { AuditModule } from '../audit/audit.module';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AuditModule } from '../audit/audit.module';
     SessionsModule,
     UsersModule,
     AuditModule,
+    DatabaseModule
   ],
   providers: [
     AuthService,

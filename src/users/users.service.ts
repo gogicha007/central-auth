@@ -23,6 +23,7 @@ import { ok } from '../common/utils/api-response.util';
 import { blockedStatuses } from './constants';
 import { getSessionCacheKey } from '../auth/auth-session-cache.util';
 import { ConfigService } from '@nestjs/config';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -163,6 +164,94 @@ export class UsersService {
     } catch (error) {
       handlePrismaError(error);
     }
+  }
+
+  async findAll() {
+    return this.dbService.user.findMany({
+      select: {
+        id: true, email: true, firstName: true, lastName: true,
+        status: true, emailVerified: true, isPlatformAdmin: true, createdAt: true
+      }
+    })
+  }
+
+  async update(userId: string, data: UpdateUserDto) {
+    const user = await this.dbService.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true, email: true, firstName: true, lastName: true, status: true
+      }
+    })
+
+    await this.auditService.create({
+      action: AuditAction.USER_UPDATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('User updated successfully', user);
+  }
+
+  async deactivate(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.DEACTIVATED }
+    })
+
+    const activeSessions = await this.sessionService.getUserActiveSessions(userId);
+    await this.sessionService.revokeSessionsByUserId(userId, 'account deactivated');
+    await Promise.all(
+      activeSessions.map((s) => this.redisService.delete(getSessionCacheKey(s.id))),
+    );
+
+    await this.auditService.create({
+      action: AuditAction.USER_DEACTIVATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account deactivated');
+  }
+
+  async reactivate(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.ACTIVE, failedLoginCount: 0, lockedAt: null },
+    });
+
+    await this.auditService.create({
+      action: AuditAction.USER_REACTIVATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account reactivated');
+  }
+
+  async remove(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.DELETED },
+    });
+
+    const activeSessions = await this.sessionService.getUserActiveSessions(userId);
+    await this.sessionService.revokeSessionsByUserId(userId, 'account deleted');
+    await Promise.all(
+      activeSessions.map((s) => this.redisService.delete(getSessionCacheKey(s.id))),
+    );
+
+    await this.auditService.create({
+      action: AuditAction.USER_DELETED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account deleted');
   }
 
   async findById(userId: string) {

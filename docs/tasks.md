@@ -81,6 +81,59 @@
                 - create member record
         [x] update membership role
 
+### Authorization matrix
+
+[x] Create organization:
+[x] authenticated user
+[x] platform admin
+
+[x] View own organization:
+[x] any active member of that organization
+[x] platform admin
+
+[x] Update organization profile:
+[x] OWNER, ADMIN
+[x] platform admin
+
+[x] Invite member:
+[x] OWNER, ADMIN, DIRECTOR
+[x] platform admin
+
+[x] Change(update) member role:
+[x] OWNER, ADMIN only for lower roles
+[x] platform admin
+
+[x] Remove member:
+[x] OWNER, ADMIN for non-owner members
+[x] platform admin
+
+- Delete organization:
+  - OWNER
+  - platform admin
+
+- Transfer ownership:
+  - OWNER
+  - platform admin
+
+Delegation rules
+
+- OWNER
+  - can assign ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - can transfer ownership
+  - can delete org
+
+- ADMIN
+  - can assign MANAGER, DIRECTOR, EMPLOYEE, VIEWER
+  - cannot assign OWNER
+  - cannot remove current OWNER
+
+- DIRECTOR
+  - can invite MANAGER, EMPLOYEE and VIEWER
+  - cannot assign ADMIN
+
+- MANAGER, EMPLOYEE, VIEWER
+  - no membership-management authority by default
+
 ## Roles module
 
     [x] roles
@@ -96,8 +149,10 @@
 ## User module
 
     [x] create user
-    [ ] update user
-    [ ] get all users
+    [x] update user
+    [x] get all users
+    [x] deactivate user
+    [x] reactivate user
 
 ## Mail module
 
@@ -136,10 +191,10 @@ Audit Actions
 
 
     [x] USER_CREATED
-    [ ] USER_UPDATED
-    [ ] USER_DEACTIVATED
-    [ ] USER_REACTIVATED
-    [ ] USER_DELETED
+    [x] USER_UPDATED
+    [x] USER_DEACTIVATED
+    [x] USER_REACTIVATED
+    [x] USER_DELETED
 
 
     [x] ORGANIZATION_CREATED
@@ -167,57 +222,3 @@ Audit Actions
     [ ] MFA_DISABLED
     [x] ACCOUNT_LOCKED
     [x] ACCOUNT_UNLOCKED
-
-
-## Authorization matrix
-
-[x] Create organization:
-    [x] authenticated user
-    [x] platform admin
-
-[x] View own organization:
-    [x] any active member of that organization
-    [x] platform admin
-
-[x] Update organization profile:
-    [x] OWNER, ADMIN
-    [x] platform admin
-
-[x] Invite member:
-    [x] OWNER, ADMIN, DIRECTOR
-    [x] platform admin
-
-[x] Change(update) member role:
-    [x] OWNER, ADMIN only for lower roles
-    [x] platform admin
-
-[x] Remove member:
-    [x] OWNER, ADMIN for non-owner members
-    [x] platform admin
-
-- Delete organization:
-  - OWNER
-  - platform admin
-
-- Transfer ownership:
-  - OWNER
-  - platform admin
-
-Delegation rules
-
-- OWNER
-  - can assign ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER
-  - can transfer ownership
-  - can delete org
-
-- ADMIN
-  - can assign MANAGER, DIRECTOR, EMPLOYEE, VIEWER
-  - cannot assign OWNER
-  - cannot remove current OWNER
-
-- DIRECTOR
-  - can invite MANAGER, EMPLOYEE and VIEWER
-  - cannot assign ADMIN
-
-- MANAGER, EMPLOYEE, VIEWER
-  - no membership-management authority by default
