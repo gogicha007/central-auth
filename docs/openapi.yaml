@@ -421,9 +421,9 @@ paths:
 
   /auth/password/forgot:
     post:
-      summary: reset password
-      operationId: reset password
-      retuestBody:
+      summary: request password reset
+      operationId: forgotPassword
+      requestBody:
         required: true
         content:
           application/json:
@@ -436,8 +436,162 @@ paths:
                   type: string
                   format: email
       responses:
-        
+        '200':
+          description: reset email sent if account exists
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: If an account exists, a reset link has been sent
+        '429':
+          description: Too many requests (ip or email rate limited)
+
+  /auth/password/reset/validate:
+    post:
+      summary: validate password reset token
+      operationId: validatePasswordResetToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: token validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: token is valid
+        '400':
+          description: Token not found, expired, or already used
+
+  /auth/password/reset:
+    post:
+      summary: reset password using token
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - newPassword
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: password reset successfully, all sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: password reset successfully
+        '400':
+          description: Token not found, expired, or already used
+
+  /auth/password/change:
+    post:
+      summary: change password for authenticated user
+      security:
+        - bearerToken: []
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: password changed successfully, all sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: password changed successfully
+        '400':
+          description: Current password invalid, or new password equals current
+        '401':
+          description: User not authenticated
+
   /organizations:
+    get:
+      summary: list all organizations (platform admin only)
+      security:
+        - bearerToken: []
+      operationId: findAllOrganizations
+      responses:
+        '200':
+          description: list of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not a platform admin
     post:
       summary: create organization
       security:
@@ -705,6 +859,405 @@ paths:
           description: Not enough permission to assign roles
         '404':
           description: Organization, member, or role not found
+
+  /organizations/{id}:
+    get:
+      summary: get organization by id
+      security:
+        - bearerToken: []
+      operationId: findOneOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: organization found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not an active member of this organization
+        '404':
+          description: Organization not found
+    patch:
+      summary: update organization profile
+      security:
+        - bearerToken: []
+      operationId: updateOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                taxNo:
+                  type: string
+                address:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: organization updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to update this organization
+        '404':
+          description: Organization not found
+    delete:
+      summary: delete organization
+      security:
+        - bearerToken: []
+      operationId: removeOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: organization deleted
+        '401':
+          description: User not authenticated
+        '403':
+          description: Only the OWNER (or platform admin) can delete an organization
+        '404':
+          description: Organization not found
+
+  /organizations/{id}/transfer:
+    post:
+      summary: transfer organization ownership
+      security:
+        - bearerToken: []
+      operationId: transferOrganizationOwnership
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - toOwnerId
+              properties:
+                toOwnerId:
+                  type: string
+                  example: 01K1E7G8VGVQ7KV9ZQV2XH2EAW
+      responses:
+        '200':
+          description: ownership transferred
+        '401':
+          description: User not authenticated
+        '403':
+          description: Only the current OWNER (or platform admin) can transfer ownership
+        '404':
+          description: Organization, current owner, or new owner not found
+
+  /organizations/{organizationId}/roles:
+    post:
+      summary: create role in organization
+      security:
+        - bearerToken: []
+      operationId: createOrganizationRole
+      parameters:
+        - in: path
+          name: organizationId
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  enum: [OWNER, ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER]
+                description:
+                  type: string
+      responses:
+        '201':
+          description: role created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to create roles
+        '409':
+          description: Role already exists for this organization
+
+  /roles/{id}:
+    patch:
+      summary: update role description or isSystem flag
+      security:
+        - bearerToken: []
+      operationId: updateRole
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Role ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                isSystem:
+                  type: boolean
+      responses:
+        '200':
+          description: role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to update this role
+        '404':
+          description: Role not found
+
+  /roles/{id}/permissions:
+    post:
+      summary: assign an existing permission to a role
+      security:
+        - bearerToken: []
+      operationId: assignRolePermission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Role ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - permissionId
+              properties:
+                permissionId:
+                  type: string
+      responses:
+        '201':
+          description: permission assigned to role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolePermission'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to assign permissions
+        '404':
+          description: Role or permission not found
+
+  /roles/{id}/permissions/{permissionId}:
+    delete:
+      summary: remove a permission from a role
+      security:
+        - bearerToken: []
+      operationId: removeRolePermission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Role ID
+          schema:
+            type: string
+        - in: path
+          name: permissionId
+          required: true
+          description: Permission ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: permission removed from role
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not enough permission to remove permissions
+        '404':
+          description: Role, permission, or assignment not found
+
+  /permissions:
+    post:
+      summary: create a standardized permission
+      security:
+        - bearerToken: []
+      operationId: createPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - resource
+                - action
+              properties:
+                resource:
+                  type: string
+                  example: ORGANIZATION
+                action:
+                  type: string
+                  example: VIEW
+      responses:
+        '201':
+          description: permission created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          description: User not authenticated
+        '409':
+          description: Permission with this resource/action already exists
+    get:
+      summary: list all permissions
+      security:
+        - bearerToken: []
+      operationId: findAllPermissions
+      responses:
+        '200':
+          description: list of permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+        '401':
+          description: User not authenticated
+
+  /permissions/{id}:
+    get:
+      summary: get permission by id
+      security:
+        - bearerToken: []
+      operationId: findOnePermission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Permission ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: permission found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          description: User not authenticated
+        '404':
+          description: Permission not found
+    patch:
+      summary: update permission
+      security:
+        - bearerToken: []
+      operationId: updatePermission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Permission ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resource:
+                  type: string
+                action:
+                  type: string
+      responses:
+        '200':
+          description: permission updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          description: User not authenticated
+        '404':
+          description: Permission not found
+    delete:
+      summary: delete permission
+      security:
+        - bearerToken: []
+      operationId: removePermission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Permission ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: permission deleted
+        '401':
+          description: User not authenticated
+        '404':
+          description: Permission not found
 
 components:
   schemas:

@@ -220,8 +220,31 @@ Endpoints
     2. create role RoleNames.OWNER (with organizationId)
     3. create organizationMember (with organizationId, creatorUserId, roleID)
 
+- find all - {GET} organizations/
+
 - Invite members - POST roganizations/:id/invitations body {email, roleId, create}
 
+- Update organization - {PATCH} organizationa/:orgId
+
+- transferOwnership - {POST} organizations/:orgId/transfer
+
+- update membership role
+
+- remove member from the org
+
+
 ## Roles module
-  - create role
+  - create role (through organizations controller)
   - update role (description & isSystem fields only)
+
+RolePermissions
+  - assign permission to the role
+  - remove permission from the role
+
+
+## Persmissions module
+  - create permission
+  - findAll permissions
+  - findOne permission
+  - update permission
+  - remove permission
