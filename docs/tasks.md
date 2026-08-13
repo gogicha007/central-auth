@@ -189,7 +189,7 @@ Audit Actions
 
 [x] Change(update) member role:
     [x] OWNER, ADMIN only for lower roles
-    [x] - platform admin
+    [x] platform admin
 
 [x] Remove member:
     [x] OWNER, ADMIN for non-owner members
