@@ -177,11 +177,11 @@ Authorization matrix
 
 - Reactivate account:
   - platform admin only
-  - NOTE: user cannot self-reactivate since DEACTIVATED blocks login (blockedStatuses)
+  - user cannot self-reactivate since DEACTIVATED blocks login (blockedStatuses)
 
 - Delete account (soft-delete, status=DELETED):
   - platform admin only
-  - NOTE: user data retained for audit purposes, never hard-deleted
+  - user data retained for audit purposes, never hard-deleted
   
 # Organizations
 

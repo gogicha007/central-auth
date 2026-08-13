@@ -1259,6 +1259,229 @@ paths:
         '404':
           description: Permission not found
 
+  /users:
+    get:
+      summary: list all users (platform admin only)
+      security:
+        - bearerToken: []
+      operationId: findAllUsers
+      responses:
+        '200':
+          description: list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not a platform admin
+
+  /users/me:
+    get:
+      summary: get current authenticated user's profile
+      security:
+        - bearerToken: []
+      operationId: findMe
+      responses:
+        '200':
+          description: current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: User not authenticated
+    patch:
+      summary: update current authenticated user's profile
+      security:
+        - bearerToken: []
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+      responses:
+        '200':
+          description: profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User updated successfully
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: User not authenticated
+
+  /users/me/deactivate:
+    post:
+      summary: deactivate own account
+      security:
+        - bearerToken: []
+      operationId: deactivateMe
+      responses:
+        '200':
+          description: account deactivated, all sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account deactivated
+        '401':
+          description: User not authenticated
+
+  /users/{id}:
+    patch:
+      summary: update another user's profile (platform admin only)
+      security:
+        - bearerToken: []
+      operationId: updateUser
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+      responses:
+        '200':
+          description: user updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User updated successfully
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not a platform admin
+        '404':
+          description: User not found
+    delete:
+      summary: delete user account (platform admin only)
+      security:
+        - bearerToken: []
+      operationId: removeUser
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: User ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: account deleted, all sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account deleted
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not a platform admin
+        '404':
+          description: User not found
+
+  /users/{id}/reactivate:
+    post:
+      summary: reactivate user account (platform admin only)
+      security:
+        - bearerToken: []
+      operationId: reactivateUser
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: User ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: account reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account reactivated
+        '401':
+          description: User not authenticated
+        '403':
+          description: Not a platform admin
+        '404':
+          description: User not found
+
 components:
   schemas:
     User:
