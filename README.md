@@ -66,10 +66,10 @@ Login:
         - set access token secret&ttl and create
         - set refresh token secret&ttl and create
         - get organizations list by user id (includes role names of that user)
-        - return { accessToken, refreshToken, tokenType, expiresIn, organizations list}
+        - return { accessToken, refreshToken, tokenType, expiresIn(seconds), organizations list}
 
     note: front end chooses organization keeps and keeps user info including current orgId
-    
+
 ## Authorization
 
 AuthGuards based on strategies using Passport library
