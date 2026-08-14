@@ -127,12 +127,6 @@ export class AuthController {
     const payload = { ...data, userId: user.id };
     return this.authService.changePassword(payload);
   }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Post('select-organization')
-  selectOrganization(){
-
-  }
   
   @Get()
   health() {
