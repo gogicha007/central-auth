@@ -23,6 +23,7 @@ import {
   getJwtOptions,
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
+import { DatabaseService } from '../database/database.service';
 
 
 @Injectable()
@@ -36,7 +37,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    private readonly dbService: DatabaseService
   ) { }
 
   async signUp(payload: SignUpDto) {
@@ -107,6 +109,15 @@ export class AuthService {
       ),
     );
 
+    const organizations = await this.dbService.organizationMember.findMany({
+      where: { userId: user.id },
+      select: {
+        organizationId: true,
+        organization: { select: { name: true } },
+        role: { select: { name: true } }
+      }
+    })
+
     await this.createAuditLog(AuditAction.LOGIN, {
       userId: user.id,
       resourceId: user.id,
@@ -124,6 +135,7 @@ export class AuthService {
           this.configService.getOrThrow<string>('JWT_TTL_M'),
           10,
         ) * 60,
+      organizations
     };
   }
 
@@ -188,7 +200,7 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw new UnauthorizedException('Invalid refresh token');
       }
-      
+
       throw error;
     }
   }

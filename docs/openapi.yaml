@@ -207,6 +207,7 @@ paths:
                   - refreshToken
                   - tokenType
                   - expiresIn
+                  - organizations
                 properties:
                   accessToken:
                     type: string
@@ -220,6 +221,36 @@ paths:
                   expiresIn:
                     type: number
                     example: 900
+                  organizations:
+                    type: array
+                    description: organizations the user is a member of, with their role in each
+                    items:
+                      type: object
+                      required:
+                        - organizationId
+                        - organization
+                        - role
+                      properties:
+                        organizationId:
+                          type: string
+                          example: 01K1E7G8VGVQ7KV9ZQV2XH2EAW
+                        organization:
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              type: string
+                              example: Acme Inc
+                        role:
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              type: string
+                              enum: [OWNER, ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER]
+                              example: OWNER
 
   /auth/refresh:
     post:

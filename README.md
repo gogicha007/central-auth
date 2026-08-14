@@ -79,7 +79,7 @@ AuthGuards based on strategies using Passport library
 
 Other guards:
 
-- OrganizationGuard
+- OrganizationGuard checks if organization exists
 
 - RolesGuard
   - first: roles guard checks if user isPlatformAdmin is true and gives unlimited access

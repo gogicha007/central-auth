@@ -128,6 +128,12 @@ export class AuthController {
     return this.authService.changePassword(payload);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Post('select-organization')
+  selectOrganization(){
+
+  }
+  
   @Get()
   health() {
     return 'get outh requested';
