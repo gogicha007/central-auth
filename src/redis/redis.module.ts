@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { RedisService } from './redis.service';
+import { HealthIndicatorService } from '@nestjs/terminus';
 
 @Module({
   providers: [
@@ -16,6 +17,7 @@ import { RedisService } from './redis.service';
       },
     },
     RedisService,
+    HealthIndicatorService
   ],
   exports: ['REDIS_CLIENT', RedisService],
 })

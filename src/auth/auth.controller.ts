@@ -127,9 +127,4 @@ export class AuthController {
     const payload = { ...data, userId: user.id };
     return this.authService.changePassword(payload);
   }
-  
-  @Get()
-  health() {
-    return 'get outh requested';
-  }
 }

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { HealthIndicatorService, HealthIndicatorResult } from '@nestjs/terminus';
 
 function isFalseLike(value: string | undefined) {
   if (!value) {
@@ -44,7 +45,9 @@ function normalizeConnectionString(
 
 @Injectable()
 export class DatabaseService extends PrismaClient implements OnModuleInit {
-  constructor() {
+  constructor(
+    private readonly healthIndicatorService: HealthIndicatorService
+  ) {
     const allowInsecureTls = isFalseLike(
       process.env.DATABASE_SSL_REJECT_UNAUTHORIZED,
     );
@@ -62,5 +65,17 @@ export class DatabaseService extends PrismaClient implements OnModuleInit {
 
   async onModuleInit() {
     await this.$connect();
+  }
+
+  async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const indicator = this.healthIndicatorService.check(key)
+
+    try {
+      await this.$queryRaw`SELECT 1`;
+
+      return indicator.up()
+    } catch (error) {
+      return indicator.down({ message: (error as Error).message })
+    }
   }
 }

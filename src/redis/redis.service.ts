@@ -1,9 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { HealthIndicatorService, HealthIndicatorResult } from '@nestjs/terminus';
 import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redis: Redis,
+    private readonly healthIndicatorService: HealthIndicatorService,
+  ) { }
 
   async get<T>(key: string): Promise<T | null> {
     const cached = await this.redis.get(key);
@@ -42,5 +46,21 @@ export class RedisService {
 
   async delete(key: string): Promise<void> {
     await this.redis.del(key);
+  }
+
+  async isHealthy(key: string): Promise<HealthIndicatorResult> {
+    const indicator = this.healthIndicatorService.check(key);
+
+    try {
+      const response = await this.redis.ping();
+
+      if (response === 'PONG') {
+        return indicator.up();
+      }
+
+      return indicator.down({ message: `Redis responded with unexpected status: ${response}` });
+    } catch (error) {
+      return indicator.down({ message: (error as Error).message });
+    }
   }
 }

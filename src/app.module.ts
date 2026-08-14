@@ -20,6 +20,7 @@ import { AuditModule } from './audit/audit.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { PermissionsModule } from './permissions/permissions.module';
     InvitationsModule,
     RolesModule,
     PermissionsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
