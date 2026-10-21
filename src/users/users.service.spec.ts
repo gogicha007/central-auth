@@ -40,6 +40,7 @@ describe('UsersService', () => {
       passwordService as any,
       sessionService as any,
       redisService as any,
+      { create: jest.fn() } as any,
     );
   });
 

@@ -6,7 +6,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuditAction, ResourceType } from '@prisma/client';
 import { SignUpDto } from './dto/signUp.dto';
 import { AuditService } from '../audit/audit.service';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PasswordService } from '../common/password/password.service';
 import { RedisService } from '../redis/redis.service';
@@ -23,7 +23,22 @@ import {
   getJwtOptions,
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
+import ms, { type StringValue } from 'ms';
 
+type RefreshFailure =
+  | 'missing_token'
+  | 'token_expired'
+  | 'token_invalid'
+  | 'session_inactive'
+  | 'version_mismatch'
+  | 'user_not_found';
+
+interface RefreshCtx {
+  userId?: string;
+  sessionId?: string;
+  ip?: string;
+  userAgent?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -36,8 +51,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-    private readonly auditService: AuditService
-  ) { }
+    private readonly auditService: AuditService,
+  ) {}
 
   async signUp(payload: SignUpDto) {
     const hashedPassword = await this.passwordService.hash(payload.password);
@@ -47,14 +62,14 @@ export class AuthService {
       firstName: payload.firstName,
       lastName: payload.lastName,
     };
-    const user = await this.userService.create(credentials)
+    const user = await this.userService.create(credentials);
     const createdUserId = user?.data?.id as string | undefined;
     if (user) {
       await this.createAuditLog(AuditAction.USER_CREATED, {
         userId: createdUserId,
         resourceId: createdUserId,
         metadata: { email: payload.email },
-      })
+      });
     }
     return user;
   }
@@ -69,7 +84,7 @@ export class AuthService {
         });
         return null;
       }
-      throw error
+      throw error;
     }
   }
 
@@ -89,7 +104,7 @@ export class AuthService {
       getJwtOptions(
         this.configService,
         'JWT_ACCESS_TOKEN_SECRET',
-        `${this.configService.getOrThrow<string>('JWT_TTL_M')}`,
+        this.accessTtl,
       ),
     );
 
@@ -103,7 +118,7 @@ export class AuthService {
       getJwtOptions(
         this.configService,
         'JWT_REFRESH_TOKEN_SECRET',
-        `${this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D')}`,
+        this.refreshTtl,
       ),
     );
 
@@ -119,11 +134,7 @@ export class AuthService {
       accessToken,
       refreshToken,
       tokenType: 'bearer',
-      expiresIn:
-        Number.parseInt(
-          this.configService.getOrThrow<string>('JWT_TTL_M'),
-          10,
-        ) * 60,
+      expiresIn: this.accessExpiresInSeconds,
     };
   }
 
@@ -132,71 +143,85 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is required');
     }
 
+    let payload: JwtPayload & { version?: number };
     try {
-      const payload = this.jwtService.verify<JwtPayload & { version?: number }>(
-        refreshToken,
-        {
-          secret: this.configService.getOrThrow('JWT_REFRESH_TOKEN_SECRET'),
-        },
-      );
-
-      const session = await getSessionForAuth(
-        this.redisService,
-        this.sessionsService,
-        payload.sid,
-      );
-      if (!session || !isSessionActive(session)) {
-        throw new UnauthorizedException('Invalid session');
-      }
-
-      if (session.refreshVersion !== payload.version) {
-        throw new UnauthorizedException('Refresh token is invalid');
-      }
-
-      const user = await this.userService.findById(payload.sub);
-      if (!user) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      const accessToken = this.jwtService.sign(
-        createTokenPayload(user, session.id),
-        getJwtOptions(
-          this.configService,
-          'JWT_ACCESS_TOKEN_SECRET',
-          `${this.configService.getOrThrow<string>('JWT_TTL_M')}m`,
-        ),
-      );
-
-      await this.createAuditLog(AuditAction.REFRESH_TOKEN, {
-        userId: user.id,
-        resourceId: user.id,
-        metadata: { sessionId: session.id },
-        ip,
-        userAgent,
+      payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.getOrThrow('JWT_REFRESH_TOKEN_SECRET'),
       });
-
-      return {
-        accessToken,
-        tokenType: 'bearer',
-        expiresIn:
-          Number.parseInt(
-            this.configService.getOrThrow<string>('JWT_TTL_M'),
-            10,
-          ) * 60,
-      };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException('Invalid refresh token');
+      if (error instanceof TokenExpiredError) {
+        return this.rejectRefresh('token_expired', { ip, userAgent });
       }
-      
+      if (error instanceof JsonWebTokenError) {
+        return this.rejectRefresh('token_invalid', { ip, userAgent });
+      }
+
       throw error;
     }
+
+    const ctx = { userId: payload.sub, sessionId: payload.sid, ip, userAgent };
+
+    const session = await getSessionForAuth(
+      this.redisService,
+      this.sessionsService,
+      payload.sid,
+    );
+    if (!session || !isSessionActive(session)) {
+      return this.rejectRefresh('session_inactive', ctx);
+    }
+
+    if (session.refreshVersion !== payload.version) {
+      return this.rejectRefresh('version_mismatch', ctx);
+    }
+
+    const user = await this.userService.findById(payload.sub);
+    if (!user) return this.rejectRefresh('user_not_found', ctx);
+
+    const rotated = await this.sessionsService.rotateRefreshVersion(
+      session.id,
+      payload.version!,
+    );
+    if (!rotated) {
+      return this.rejectRefresh('version_mismatch', ctx);
+    }
+    await cacheSession(this.redisService, rotated);
+
+    const tokenPayload = createTokenPayload(user, session.id);
+
+    const accessToken = this.jwtService.sign(
+      tokenPayload,
+      getJwtOptions(
+        this.configService,
+        'JWT_ACCESS_TOKEN_SECRET',
+        this.accessTtl,
+      ),
+    );
+
+    const newRefreshToken = this.jwtService.sign(
+      {...tokenPayload, version: rotated.refreshVersion},
+      getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl)
+    )
+
+    await this.createAuditLog(AuditAction.REFRESH_TOKEN, {
+      userId: user.id,
+      resourceId: user.id,
+      metadata: { sessionId: session.id },
+      ip,
+      userAgent,
+    });
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      tokenType: 'bearer',
+      expiresIn: this.accessExpiresInSeconds,
+    };
   }
 
   async verifyEmail(token: string) {
-    const emailVerified = await this.userService.verifyEmailByToken(token)
+    const emailVerified = await this.userService.verifyEmailByToken(token);
     if (emailVerified) {
-      await this.createAuditLog(AuditAction.EMAIL_VERIFIED)
+      await this.createAuditLog(AuditAction.EMAIL_VERIFIED);
     }
     return emailVerified;
   }
@@ -284,7 +309,45 @@ export class AuthService {
         userAgent: context.userAgent,
       });
     } catch (error) {
-      this.logger.warn("Audit write failed", { action, error })
+      this.logger.warn('Audit write failed', { action, error });
     }
+  }
+
+  private async rejectRefresh(
+    reason: RefreshFailure,
+    ctx: RefreshCtx = {},
+  ): Promise<never> {
+    this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
+
+    if (reason === 'version_mismatch' || reason === 'token_invalid') {
+      await this.createAuditLog(AuditAction.REFRESH_FAILED, {
+        userId: ctx.userId,
+        resource: ResourceType.SESSION,
+        resourceId: ctx.sessionId,
+        metadata: { reason },
+        ip: ctx.ip,
+        userAgent: ctx.userAgent,
+      });
+    }
+
+    throw new UnauthorizedException('Invalid refresh token');
+  }
+
+  private get accessTtl(): StringValue {
+    return this.configService.getOrThrow<string>('JWT_TTL_M') as StringValue;
+  }
+
+  private get refreshTtl(): StringValue {
+    return this.configService.getOrThrow<string>(
+      'JWT_REFRESH_TTL_D',
+    ) as StringValue;
+  }
+
+  private get accessExpiresInSeconds(): number {
+    const millis = ms(this.accessTtl);
+    if (typeof millis !== 'number' || Number.isNaN(millis)) {
+      throw new Error(`Invalid access token TTL: ${this.accessTtl}`);
+    }
+    return Math.floor(millis / 1000);
   }
 }
