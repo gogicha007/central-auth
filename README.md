@@ -52,6 +52,7 @@ Login:
             - in case of wrong password: increment by 1
             - in case of right password: 0
             - if failedLoginCount exceeds the limit (5) -> update user status as LOCKED
+        - check lockedAt time and calculate if 30 minutes(env: ACCOUT_LOCK_DURATION_M) and act accordingly
 
     2. Create session
         - set session absolute expiration time (30 days)
@@ -78,7 +79,7 @@ AuthGuards based on strategies using Passport library
 
 Other guards:
 
-- OrganizationGuard
+- OrganizationGuard checks if organization exists
 
 - RolesGuard
   - first: roles guard checks if user isPlatformAdmin is true and gives unlimited access
@@ -150,6 +151,38 @@ message: string
 - cleanup revoked sessions: removes records of revoked sessions after retention days
 - get user active sessions: returns the list of active sessions by user
 
+# Users
+
+Authorization matrix
+
+- Get all users:
+  - platform admin only
+
+- Get own profile:
+  - authenticated user (self)
+  - platform admin
+
+- Update own profile (firstName, lastName):
+  - authenticated user (self)
+  - platform admin
+
+- Update other user's profile:
+  - platform admin only
+
+- Deactivate own account:
+  - authenticated user (self)
+
+- Deactivate other user's account:
+  - platform admin only
+
+- Reactivate account:
+  - platform admin only
+  - user cannot self-reactivate since DEACTIVATED blocks login (blockedStatuses)
+
+- Delete account (soft-delete, status=DELETED):
+  - platform admin only
+  - user data retained for audit purposes, never hard-deleted
+  
 # Organizations
 
 Authorization matrix
@@ -220,8 +253,31 @@ Endpoints
     2. create role RoleNames.OWNER (with organizationId)
     3. create organizationMember (with organizationId, creatorUserId, roleID)
 
+- find all - {GET} organizations/
+
 - Invite members - POST roganizations/:id/invitations body {email, roleId, create}
 
+- Update organization - {PATCH} organizationa/:orgId
+
+- transferOwnership - {POST} organizations/:orgId/transfer
+
+- update membership role
+
+- remove member from the org
+
+
 ## Roles module
-  - create role
+  - create role (through organizations controller)
   - update role (description & isSystem fields only)
+
+RolePermissions
+  - assign permission to the role
+  - remove permission from the role
+
+
+## Persmissions module
+  - create permission
+  - findAll permissions
+  - findOne permission
+  - update permission
+  - remove permission

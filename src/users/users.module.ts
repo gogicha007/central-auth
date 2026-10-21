@@ -6,6 +6,7 @@ import { PasswordModule } from '../common/password/password.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { RedisModule } from '../redis/redis.module';
 import { AuditModule } from '../audit/audit.module';
+import { UsersController } from './users.controller';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { AuditModule } from '../audit/audit.module';
     RedisModule,
     AuditModule,
   ],
+  controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   BadRequestException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
@@ -21,9 +22,12 @@ import { handlePrismaError } from '../common/filters/error.util';
 import { ok } from '../common/utils/api-response.util';
 import { blockedStatuses } from './constants';
 import { getSessionCacheKey } from '../auth/auth-session-cache.util';
+import { ConfigService } from '@nestjs/config';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   constructor(
     private readonly dbService: DatabaseService,
     private readonly mailService: MailService,
@@ -31,6 +35,7 @@ export class UsersService {
     private readonly sessionService: SessionsService,
     private readonly redisService: RedisService,
     private readonly auditService: AuditService,
+    private readonly configService: ConfigService
   ) { }
 
   async create(payload: CreateUserDto) {
@@ -161,6 +166,94 @@ export class UsersService {
     }
   }
 
+  async findAll() {
+    return this.dbService.user.findMany({
+      select: {
+        id: true, email: true, firstName: true, lastName: true,
+        status: true, emailVerified: true, isPlatformAdmin: true, createdAt: true
+      }
+    })
+  }
+
+  async update(userId: string, data: UpdateUserDto) {
+    const user = await this.dbService.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true, email: true, firstName: true, lastName: true, status: true
+      }
+    })
+
+    await this.auditService.create({
+      action: AuditAction.USER_UPDATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('User updated successfully', user);
+  }
+
+  async deactivate(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.DEACTIVATED }
+    })
+
+    const activeSessions = await this.sessionService.getUserActiveSessions(userId);
+    await this.sessionService.revokeSessionsByUserId(userId, 'account deactivated');
+    await Promise.all(
+      activeSessions.map((s) => this.redisService.delete(getSessionCacheKey(s.id))),
+    );
+
+    await this.auditService.create({
+      action: AuditAction.USER_DEACTIVATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account deactivated');
+  }
+
+  async reactivate(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.ACTIVE, failedLoginCount: 0, lockedAt: null },
+    });
+
+    await this.auditService.create({
+      action: AuditAction.USER_REACTIVATED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account reactivated');
+  }
+
+  async remove(userId: string) {
+    await this.dbService.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.DELETED },
+    });
+
+    const activeSessions = await this.sessionService.getUserActiveSessions(userId);
+    await this.sessionService.revokeSessionsByUserId(userId, 'account deleted');
+    await Promise.all(
+      activeSessions.map((s) => this.redisService.delete(getSessionCacheKey(s.id))),
+    );
+
+    await this.auditService.create({
+      action: AuditAction.USER_DELETED,
+      resource: ResourceType.USER,
+      userId,
+      resourceId: userId,
+    });
+
+    return ok('Account deleted');
+  }
+
   async findById(userId: string) {
     return this.dbService.user.findUnique({
       where: { id: userId },
@@ -183,10 +276,32 @@ export class UsersService {
         status: true,
         passwordHash: true,
         isPlatformAdmin: true,
+        lockedAt: true
       },
     });
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    if (user.status === UserStatus.LOCKED && user.lockedAt) {
+      const lockDurationMs =
+        Number.parseInt(this.configService.get<string>('ACCOUNT_LOCK_DURATION_M') ?? '30', 10) * 60 * 1000;
+
+      if (Date.now() - user.lockedAt.getTime() >= lockDurationMs) {
+        await this.dbService.user.update({
+          where: { id: user.id },
+          data: { status: UserStatus.ACTIVE, failedLoginCount: 0, lockedAt: null },
+        });
+        user.status = UserStatus.ACTIVE;
+
+        await this.auditService.create({
+          action: AuditAction.ACCOUNT_UNLOCKED,
+          resource: ResourceType.USER,
+          userId: user.id,
+          resourceId: user.id,
+          metadata: { email: user.email },
+        });
+      }
+    }
 
     if (blockedStatuses.includes(user.status)) {
       throw new UnauthorizedException('Invalid credentials');
@@ -215,10 +330,10 @@ export class UsersService {
           await tx.user.update({
             where: { id: user.id },
             data: {
-              status: UserStatus.LOCKED,
+              status: UserStatus.LOCKED, lockedAt: new Date()
             },
           });
-          accountLocked = true
+          accountLocked = true;
         }
       });
       if (accountLocked) {
@@ -229,9 +344,12 @@ export class UsersService {
             userId: user.id,
             resourceId: user.id,
             metadata: { email: user.email },
-          })
-        } catch {
-          // Best-effort audit logging should not alter authentication behavior.
+          });
+        } catch (error) {
+          this.logger.warn('Audit write failed', {
+            action: AuditAction.ACCOUNT_LOCKED,
+            error,
+          });
         }
       }
       throw new UnauthorizedException('Invalid credentials');

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -13,7 +13,7 @@ export class RolesService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async create(data: CreateRoleDto) {
     const role = await this.dbService.role.create({
@@ -79,5 +79,49 @@ export class RolesService {
     } catch (error) {
       this.logger.warn('Audit write failed', { action, error });
     }
+  }
+
+  async assignPermission(roleId: string, permissionId: string) {
+    const [role, permission] = await Promise.all([
+      this.dbService.role.findUnique({ where: { id: roleId } }),
+      this.dbService.permission.findUnique({ where: { id: permissionId } }),
+    ]);
+
+    if (!role) throw new NotFoundException(`Role '${roleId}' not found`);
+    if (!permission)
+      throw new NotFoundException(`Permission '${permissionId}' not found`);
+
+    const rolePermission = await this.dbService.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId, permissionId } },
+      update: {},
+      create: { roleId, permissionId },
+    });
+
+    await this.createAuditLog(AuditAction.PERMISSION_GRANTED, {
+      organizationId: role.organizationId,
+      resource: ResourceType.PERMISSION,
+      resourceId: permissionId,
+      metadata: { roleId },
+    });
+
+    return rolePermission;
+  }
+
+  async removePermission(roleId: string, permissionId: string) {
+    const role = await this.dbService.role.findUnique({
+      where: { id: roleId },
+    });
+    if (!role) throw new NotFoundException(`Role '${roleId}' not found`);
+
+    await this.dbService.rolePermission.delete({
+      where: { roleId_permissionId: { roleId, permissionId } },
+    });
+
+    await this.createAuditLog(AuditAction.PERMISSION_REVOKED, {
+      organizationId: role.organizationId,
+      resource: ResourceType.PERMISSION,
+      resourceId: permissionId,
+      metadata: { roleId },
+    });
   }
 }

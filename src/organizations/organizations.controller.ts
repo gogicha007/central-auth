@@ -23,7 +23,7 @@ import type { AuthenticatedUserContext } from '../auth/auth.types';
 import { UpdateMembershipRoleRequestDto } from './dto/update-membership-role';
 import { OrganizationGuard } from '../auth/guards/organization.guard';
 
-@UseGuards(JwtAuthGuard, OrganizationGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly organizationsService: OrganizationsService) { }
@@ -49,14 +49,14 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'DIRECTOR', 'EMPLOYEE', 'VIEWER')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(id);
   }
 
   @Roles('OWNER', 'ADMIN')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -66,14 +66,14 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.organizationsService.remove(id);
   }
 
   @Roles('OWNER')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Post(':id/transfer')
   transferOwnership(
     @Param('id') id: string,
@@ -89,7 +89,7 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER', 'ADMIN', 'DIRECTOR')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Post(':id/invitations')
   orgInvitacions(
     @CurrentUser() user: AuthenticatedUserContext,
@@ -106,7 +106,7 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER', 'ADMIN')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Post(':organizationId/roles')
   createRole(
     @Param('organizationId') organizationId: string,
@@ -119,7 +119,7 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER', 'ADMIN')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Patch(':id/members/:memberId/role')
   membershipRoles(
     @Param('id') id: string,
@@ -135,7 +135,7 @@ export class OrganizationsController {
   }
 
   @Roles('OWNER', 'ADMIN')
-  @UseGuards(RolesGuard)
+  @UseGuards(OrganizationGuard, RolesGuard)
   @Delete(':id/members/:memberId')
   removeMember(
     @Param('id') id: string,

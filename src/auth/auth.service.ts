@@ -38,7 +38,8 @@ interface RefreshCtx {
   sessionId?: string;
   ip?: string;
   userAgent?: string;
-}
+}import { DatabaseService } from '../database/database.service';
+
 
 @Injectable()
 export class AuthService {
@@ -52,6 +53,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
     private readonly auditService: AuditService,
+    private readonly dbService: DatabaseService,
   ) {}
 
   async signUp(payload: SignUpDto) {
@@ -121,6 +123,15 @@ export class AuthService {
         this.refreshTtl,
       ),
     );
+
+    const organizations = await this.dbService.organizationMember.findMany({
+      where: { userId: user.id },
+      select: {
+        organizationId: true,
+        organization: { select: { name: true } },
+        role: { select: { name: true } }
+      }
+    })
 
     await this.createAuditLog(AuditAction.LOGIN, {
       userId: user.id,

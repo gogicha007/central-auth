@@ -19,6 +19,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { AuditModule } from './audit/audit.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { RolesModule } from './roles/roles.module';
     AuditModule,
     InvitationsModule,
     RolesModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
