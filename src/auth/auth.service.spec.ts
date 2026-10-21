@@ -9,9 +9,11 @@ import { SessionsService } from '../sessions/sessions.service';
 
 describe('AuthService.login', () => {
   let authService: AuthService;
-  let sessionsService: { createSession: jest.Mock };
+  let sessionsService: {
+    createSession: jest.Mock<(...args: any[]) => Promise<{ id: string }>>;
+  };
   let jwtService: { sign: jest.Mock };
-  let configService: { getOrThrow: jest.Mock };
+  let configService: { getOrThrow: jest.Mock<(key: string) => string> };
 
   beforeEach(async () => {
     sessionsService = { createSession: jest.fn() };
@@ -24,7 +26,7 @@ describe('AuthService.login', () => {
           case 'JWT_REFRESH_TOKEN_SECRET':
             return 'refresh-secret';
           case 'JWT_TTL_M':
-            return '15';
+            return '15m';
           case 'REFRESH_TTL':
             return '30d';
           default:
