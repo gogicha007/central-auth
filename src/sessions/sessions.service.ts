@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '@nestjs/config';
 import { handlePrismaError } from '../common/filters/error.util';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SessionsService {
@@ -184,11 +185,23 @@ export class SessionsService {
   }
 
   async rotateRefreshVersion(sessionId: string, expected: number) {
-    const { count } = await this.dbService.session.updateMany({
-      where: { id: sessionId, refreshVersion: expected },
-      data: { refreshVersion: { increment: 1 } },
-    });
-    if (count === 0) return null;
-    return this.dbService.session.findUnique({ where: { id: sessionId } });
+    try {
+      return await this.dbService.session.update({
+        where: {
+          id: sessionId,
+          refreshVersion: expected,
+          revokedAt: null,
+        },
+        data: { refreshVersion: { increment: 1 } },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        return null;
+      }
+      throw error;
+    }
   }
 }

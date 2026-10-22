@@ -92,11 +92,17 @@ export class AuthService {
   }
 
   async login(user: LoginResponseDto, ip?: string, userAgent?: string | null) {
-    const session = await this.sessionsService.createSession(
-      user.id,
-      ip,
-      userAgent,
-    );
+    const organizations = await
+      this.dbService.organizationMember.findMany({
+        where: { userId: user.id },
+        select: {
+          organizationId: true,
+          organization: { select: { name: true } },
+          role: { select: { name: true } }
+        }
+      })
+
+    const session = await this.sessionsService.createSession(user.id, ip, userAgent)
 
     await cacheSession(this.redisService, session);
 
@@ -104,35 +110,15 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(
       accessPayload,
-      getJwtOptions(
-        this.configService,
-        'JWT_ACCESS_TOKEN_SECRET',
-        this.accessTtl,
-      ),
+      getJwtOptions(this.configService, 'JWT_ACCESS_TOKEN_SECRET', this.accessTtl),
     );
 
-    const refreshPayload = {
-      ...accessPayload,
-      version: session.refreshVersion,
-    };
+    const refreshPayload = { ...accessPayload, version: session.refreshVersion, };
 
     const refreshToken = this.jwtService.sign(
       refreshPayload,
-      getJwtOptions(
-        this.configService,
-        'JWT_REFRESH_TOKEN_SECRET',
-        this.refreshTtl
-      ),
+      getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl),
     );
-
-    const organizations = await this.dbService.organizationMember.findMany({
-      where: { userId: user.id },
-      select: {
-        organizationId: true,
-        organization: { select: { name: true } },
-        role: { select: { name: true } }
-      }
-    })
 
     await this.createAuditLog(AuditAction.LOGIN, {
       userId: user.id,
@@ -146,11 +132,7 @@ export class AuthService {
       accessToken,
       refreshToken,
       tokenType: 'bearer',
-      expiresIn:
-        Number.parseInt(
-          this.configService.getOrThrow<string>('JWT_TTL_M'),
-          10,
-        ) * 60,
+      expiresIn: this.accessExpiresInSeconds,
       organizations
     };
   }
@@ -190,18 +172,22 @@ export class AuthService {
     }
 
     const user = await this.userService.findById(payload.sub);
-    if (!user) {
-      return this.rejectRefresh('user_not_found', ctx);
-    }
+    if (!user) { return this.rejectRefresh('user_not_found', ctx) }
+
+    if (typeof payload.version !== 'number') { return this.rejectRefresh('token_invalid', ctx) }
 
     const rotated = await this.sessionsService.rotateRefreshVersion(
       session.id,
-      payload.version!,
+      payload.version
     );
-    if (!rotated) {
-      return this.rejectRefresh('version_mismatch', ctx);
+    if (!rotated) { return this.rejectRefresh('version_mismatch', ctx) }
+
+    try {
+      await cacheSession(this.redisService, rotated);
+    } catch (error) {
+      this.logger.warn({ msg: 'Session cache write failed', sessionId: session.id, error })
+      await this.redisService.delete(getSessionCacheKey(session.id)).catch(() => undefined);
     }
-    await cacheSession(this.redisService, rotated);
 
     const tokenPayload = createTokenPayload(user, session.id);
     const accessToken = this.jwtService.sign(
@@ -343,7 +329,11 @@ export class AuthService {
   }
 
   private async rejectRefresh(reason: RefreshFailure, ctx: RefreshCtx = {}): Promise<never> {
-    this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
+    if (reason === 'token_expired' || reason === 'session_inactive') {
+      this.logger.log({ msg: 'Refresh rejected', reason, ...ctx });
+    } else {
+      this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
+    }
 
     if (reason === 'version_mismatch' || reason === 'token_invalid') {
       await this.createAuditLog(AuditAction.REFRESH_FAILED, {
