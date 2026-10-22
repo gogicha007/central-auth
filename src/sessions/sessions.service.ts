@@ -198,14 +198,6 @@ export class SessionsService {
   }
 
   async rotateRefreshVersion(sessionId: string, expected: number) {
-<<<<<<< HEAD
-    const { count } = await this.dbService.session.updateMany({
-      where: { id: sessionId, refreshVersion: expected },
-      data: { refreshVersion: { increment: 1 } },
-    });
-    if (count === 0) return null;
-    return this.dbService.session.findUnique({ where: { id: sessionId } });
-=======
     try {
       return await this.dbService.session.update({
         where: {
@@ -224,6 +216,5 @@ export class SessionsService {
       }
       throw error;
     }
->>>>>>> develop
   }
 }

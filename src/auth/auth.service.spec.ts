@@ -35,11 +35,7 @@ describe('AuthService.login', () => {
             return 'refresh-secret';
           case 'JWT_TTL_M':
             return '15m';
-<<<<<<< HEAD
           case 'JWT_REFRESH_TTL_D':
-=======
-          case 'REFRESH_TTL':
->>>>>>> develop
             return '30d';
           default:
             return '';
