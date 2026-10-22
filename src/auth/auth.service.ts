@@ -313,11 +313,11 @@ export class AuthService {
 
 
   private get accessTtl(): StringValue {
-    return this.configService.getOrThrow<string>('JWT_ACCESS_TTL') as StringValue
+    return this.configService.getOrThrow<string>('JWT_ACCESS_TTL_M') as StringValue
   }
 
   private get refreshTtl(): StringValue {
-    return this.configService.getOrThrow<string>('JWT_REFRESH_TTL') as StringValue;
+    return this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D') as StringValue;
   }
 
   private get accessExpiresInSeconds(): number {

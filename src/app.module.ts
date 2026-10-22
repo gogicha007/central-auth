@@ -21,12 +21,14 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { HealthModule } from './health/health.module';
+import { validateEnvironment } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [authConfig],
+      validate: validateEnvironment
     }),
     BullModule.forRoot({
       connection: {
