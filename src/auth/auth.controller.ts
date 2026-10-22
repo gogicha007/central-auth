@@ -22,10 +22,11 @@ import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResetTokenValidateDto } from './dto/reset-token-validate.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   private getRequestContext(req: Request) {
     const forwarded = req.headers['x-forwarded-for'];
@@ -58,11 +59,10 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('refresh')
-  refresh(@Req() req: Request, @Body('refreshToken') refreshToken: string) {
+  refresh(@Req() req: Request, @Body() data: RefreshTokenDto) {
     const { ip, userAgent } = this.getRequestContext(req);
-    return this.authService.refresh(refreshToken, ip, userAgent);
+    return this.authService.refresh(data.refreshToken, ip, userAgent);
   }
 
   @UseGuards(AuthGuard('jwt'))
