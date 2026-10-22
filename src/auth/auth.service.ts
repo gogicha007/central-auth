@@ -23,27 +23,8 @@ import {
   getJwtOptions,
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
-<<<<<<< HEAD
-import ms, { type StringValue } from 'ms';
-
-type RefreshFailure =
-  | 'missing_token'
-  | 'token_expired'
-  | 'token_invalid'
-  | 'session_inactive'
-  | 'version_mismatch'
-  | 'user_not_found';
-
-interface RefreshCtx {
-  userId?: string;
-  sessionId?: string;
-  ip?: string;
-  userAgent?: string;
-}import { DatabaseService } from '../database/database.service';
-=======
 import { DatabaseService } from '../database/database.service';
 import ms, { type StringValue } from 'ms'
->>>>>>> develop
 
 
 type RefreshFailure =
@@ -129,30 +110,22 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(
       accessPayload,
-<<<<<<< HEAD
       getJwtOptions(
         this.configService,
         'JWT_ACCESS_TOKEN_SECRET',
         this.accessTtl,
       ),
-=======
-      getJwtOptions(this.configService, 'JWT_ACCESS_TOKEN_SECRET', this.accessTtl),
->>>>>>> develop
     );
 
     const refreshPayload = { ...accessPayload, version: session.refreshVersion, };
 
     const refreshToken = this.jwtService.sign(
       refreshPayload,
-<<<<<<< HEAD
       getJwtOptions(
         this.configService,
         'JWT_REFRESH_TOKEN_SECRET',
         this.refreshTtl,
       ),
-=======
-      getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl),
->>>>>>> develop
     );
 
     await this.createAuditLog(AuditAction.LOGIN, {
@@ -168,21 +141,13 @@ export class AuthService {
       refreshToken,
       tokenType: 'bearer',
       expiresIn: this.accessExpiresInSeconds,
-<<<<<<< HEAD
-=======
-      organizations
->>>>>>> develop
     };
   }
 
   async refresh(refreshToken: string, ip?: string, userAgent?: string) {
     if (!refreshToken) return this.rejectRefresh('missing_token', { ip, userAgent })
 
-<<<<<<< HEAD
     let payload: JwtPayload & { version?: number };
-=======
-    let payload: JwtPayload & { version?: number }
->>>>>>> develop
     try {
       payload = this.jwtService.verify(refreshToken, {
         secret: this.configService.getOrThrow('JWT_REFRESH_TOKEN_SECRET'),
@@ -190,12 +155,9 @@ export class AuthService {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         return this.rejectRefresh('token_expired', { ip, userAgent });
-<<<<<<< HEAD
       }
       if (error instanceof JsonWebTokenError) {
         return this.rejectRefresh('token_invalid', { ip, userAgent });
-=======
->>>>>>> develop
       }
 
       if (error instanceof JsonWebTokenError) {
@@ -204,11 +166,7 @@ export class AuthService {
       throw error;
     }
 
-<<<<<<< HEAD
     const ctx = { userId: payload.sub, sessionId: payload.sid, ip, userAgent };
-=======
-    const ctx = { userId: payload.sub, sessionId: payload.sid, ip, userAgent }
->>>>>>> develop
 
     const session = await getSessionForAuth(
       this.redisService,
