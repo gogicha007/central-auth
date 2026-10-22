@@ -8,6 +8,8 @@ paths:
   /auth/signup:
     post:
       summary: Create user
+      description: Limited to 5 requests per minute per IP per API instance.
+      security: []
       operationId: signup
       requestBody:
         required: true
@@ -33,6 +35,8 @@ paths:
                   type: string
 
       responses:
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
         '201':
           description: create user and send verification email
           content:
@@ -176,8 +180,8 @@ paths:
   /auth/login:
     post:
       summary: Login user
-      security:
-        - bearerToken: []
+      description: Limited to 5 attempts per minute per IP per API instance. Failed logins count toward this limit.
+      security: []
       operationId: login
       requestBody:
         required: true
@@ -196,7 +200,9 @@ paths:
                   type: string
                   format: password
       responses:
-        '200':
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
+        '201':
           description: login user
           content:
             application/json:
@@ -249,14 +255,22 @@ paths:
                           properties:
                             name:
                               type: string
-                              enum: [OWNER, ADMIN, MANAGER, DIRECTOR, EMPLOYEE, VIEWER]
+                              enum:
+                                [
+                                  OWNER,
+                                  ADMIN,
+                                  MANAGER,
+                                  DIRECTOR,
+                                  EMPLOYEE,
+                                  VIEWER,
+                                ]
                               example: OWNER
 
   /auth/refresh:
     post:
       summary: refresh token
-      security:
-        - bearerToken: []
+      description: Limited to 20 requests per minute per IP per API instance. Authenticates using the refresh token in the body; no access token is required.
+      security: []
       operationId: refresh token
       requestBody:
         required: true
@@ -271,7 +285,9 @@ paths:
                   type: string
                   format: token
       responses:
-        '200':
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
+        '201':
           description: refresh token
           content:
             application/json:
@@ -714,7 +730,7 @@ paths:
                     type: string
                     example: Organization name or slug already exists
 
-  /organizations/{id}/invitations:
+  /organizations/{organizationId}/invitations:
     post:
       summary: invite user to organization
       security:
@@ -722,7 +738,7 @@ paths:
       operationId: inviteOrganizationMember
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -835,7 +851,7 @@ paths:
         '404':
           description: Invitation not found
 
-  /organizations/{id}/members/{memberId}/role:
+  /organizations/{organizationId}/members/{memberId}/role:
     patch:
       summary: assign role to user
       security:
@@ -843,7 +859,7 @@ paths:
       operationId: assignOrganizationMemberRole
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -891,7 +907,7 @@ paths:
         '404':
           description: Organization, member, or role not found
 
-  /organizations/{id}:
+  /organizations/{organizationId}:
     get:
       summary: get organization by id
       security:
@@ -899,7 +915,7 @@ paths:
       operationId: findOneOrganization
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -924,7 +940,7 @@ paths:
       operationId: updateOrganization
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -965,7 +981,7 @@ paths:
       operationId: removeOrganization
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -980,7 +996,7 @@ paths:
         '404':
           description: Organization not found
 
-  /organizations/{id}/transfer:
+  /organizations/{organizationId}/transfer:
     post:
       summary: transfer organization ownership
       security:
@@ -988,7 +1004,7 @@ paths:
       operationId: transferOrganizationOwnership
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
           description: Organization ID
           schema:
@@ -1057,7 +1073,7 @@ paths:
         '409':
           description: Role already exists for this organization
 
-  /roles/{id}:
+  /organizations/{organizationId}/roles/{roleId}:
     patch:
       summary: update role description or isSystem flag
       security:
@@ -1065,9 +1081,15 @@ paths:
       operationId: updateRole
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
-          description: Role ID
+          description: Organization whose active owner or administrator authorizes this operation
+          schema:
+            type: string
+        - in: path
+          name: roleId
+          required: true
+          description: Role ID belonging to this organization
           schema:
             type: string
       requestBody:
@@ -1095,7 +1117,7 @@ paths:
         '404':
           description: Role not found
 
-  /roles/{id}/permissions:
+  /organizations/{organizationId}/roles/{roleId}/permissions:
     post:
       summary: assign an existing permission to a role
       security:
@@ -1103,9 +1125,15 @@ paths:
       operationId: assignRolePermission
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
-          description: Role ID
+          description: Organization whose active owner or administrator authorizes this operation
+          schema:
+            type: string
+        - in: path
+          name: roleId
+          required: true
+          description: Role ID belonging to this organization
           schema:
             type: string
       requestBody:
@@ -1133,7 +1161,7 @@ paths:
         '404':
           description: Role or permission not found
 
-  /roles/{id}/permissions/{permissionId}:
+  /organizations/{organizationId}/roles/{roleId}/permissions/{permissionId}:
     delete:
       summary: remove a permission from a role
       security:
@@ -1141,9 +1169,15 @@ paths:
       operationId: removeRolePermission
       parameters:
         - in: path
-          name: id
+          name: organizationId
           required: true
-          description: Role ID
+          description: Organization whose active owner or administrator authorizes this operation
+          schema:
+            type: string
+        - in: path
+          name: roleId
+          required: true
+          description: Role ID belonging to this organization
           schema:
             type: string
         - in: path
@@ -1163,6 +1197,7 @@ paths:
           description: Role, permission, or assignment not found
 
   /permissions:
+    description: Global permission catalog. All operations require a platform administrator.
     post:
       summary: create a standardized permission
       security:
@@ -1213,6 +1248,7 @@ paths:
           description: User not authenticated
 
   /permissions/{id}:
+    description: Global permission catalog. All operations require a platform administrator.
     get:
       summary: get permission by id
       security:
@@ -1514,6 +1550,24 @@ paths:
           description: User not found
 
 components:
+  responses:
+    AuthRateLimited:
+      description: Too many authentication requests from this IP. Retry after the indicated delay.
+      headers:
+        Retry-After:
+          description: Seconds until another request is allowed.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 429
+              message:
+                type: string
   schemas:
     User:
       type: object

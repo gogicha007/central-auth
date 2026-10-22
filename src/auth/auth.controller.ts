@@ -17,11 +17,12 @@ import type { AuthenticatedUserContext, UserContext } from './auth.types';
 import type { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ForgotPasswordThrottlerGuard } from './guards/forgot-password-throttler.guard';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResetTokenValidateDto } from './dto/reset-token-validate.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -41,12 +42,17 @@ export class AuthController {
     return { ip, userAgent };
   }
 
+  @UseGuards(ThrottlerGuard)
+  @SkipThrottle({ ipStrict: true, emailStrict: true })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(ThrottlerGuard, LocalAuthGuard)
+  @SkipThrottle({ ipStrict: true, emailStrict: true })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   async login(@Req() req: Request, @CurrentUser() user: UserContext) {
     const { ip, userAgent } = this.getRequestContext(req);
@@ -58,11 +64,13 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(ThrottlerGuard)
+  @SkipThrottle({ ipStrict: true, emailStrict: true })
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('refresh')
-  refresh(@Req() req: Request, @Body('refreshToken') refreshToken: string) {
+  refresh(@Req() req: Request, @Body() data: RefreshTokenDto) {
     const { ip, userAgent } = this.getRequestContext(req);
-    return this.authService.refresh(refreshToken, ip, userAgent);
+    return this.authService.refresh(data.refreshToken, ip, userAgent);
   }
 
   @UseGuards(AuthGuard('jwt'))

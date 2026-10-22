@@ -135,6 +135,9 @@ Password change for authenticated user
 Multiple throttler definitions are set up in app.module
 protected endpoints: - auth/password/forgot endpoint protected with ip&email rate limiting
 
+# Health checks
+  - database service healch check
+  - redis service health check
 # Resopnse
 
 in case of success:

@@ -13,7 +13,7 @@ export class RolesService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   async create(data: CreateRoleDto) {
     const role = await this.dbService.role.create({
@@ -32,9 +32,10 @@ export class RolesService {
     return role;
   }
 
-  async update(id: string, data: UpdateRoleDto) {
+  async update(organizationId: string, id: string, data: UpdateRoleDto) {
+    await this.findInOrganization(organizationId, id);
     const role = await this.dbService.role.update({
-      where: { id },
+      where: { id, organizationId },
       data,
     });
 
@@ -81,9 +82,22 @@ export class RolesService {
     }
   }
 
-  async assignPermission(roleId: string, permissionId: string) {
+  private async findInOrganization(organizationId: string, id: string) {
+    const role = await this.dbService.role.findUnique({
+      where: { id, organizationId },
+    });
+    if (!role)
+      throw new NotFoundException('Role not found in this organization');
+    return role;
+  }
+
+  async assignPermission(
+    organizationId: string,
+    roleId: string,
+    permissionId: string,
+  ) {
     const [role, permission] = await Promise.all([
-      this.dbService.role.findUnique({ where: { id: roleId } }),
+      this.findInOrganization(organizationId, roleId),
       this.dbService.permission.findUnique({ where: { id: permissionId } }),
     ]);
 
@@ -107,11 +121,12 @@ export class RolesService {
     return rolePermission;
   }
 
-  async removePermission(roleId: string, permissionId: string) {
-    const role = await this.dbService.role.findUnique({
-      where: { id: roleId },
-    });
-    if (!role) throw new NotFoundException(`Role '${roleId}' not found`);
+  async removePermission(
+    organizationId: string,
+    roleId: string,
+    permissionId: string,
+  ) {
+    const role = await this.findInOrganization(organizationId, roleId);
 
     await this.dbService.rolePermission.delete({
       where: { roleId_permissionId: { roleId, permissionId } },

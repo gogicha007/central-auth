@@ -3,13 +3,14 @@ import { Reflector } from '@nestjs/core';
 import { RoleNames } from '@prisma/client';
 
 describe('PermissionsGuard', () => {
-  const makeContext = (request: any) => ({
-    switchToHttp: () => ({
-      getRequest: () => request,
-    }),
-    getHandler: () => ({}),
-    getClass: () => ({}),
-  }) as any;
+  const makeContext = (request: any) =>
+    ({
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+      getHandler: () => ({}),
+      getClass: () => ({}),
+    }) as any;
 
   it('allows platform admins without checking org permissions', async () => {
     const reflector = {
@@ -25,7 +26,7 @@ describe('PermissionsGuard', () => {
     const guard = new PermissionsGuard(reflector, dbService);
     const context = makeContext({
       user: { id: 'u-1', isPlatformAdmin: true },
-      params: { id: 'org-1' },
+      params: { organizationId: 'org-1' },
     });
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
@@ -52,7 +53,7 @@ describe('PermissionsGuard', () => {
     const guard = new PermissionsGuard(reflector, dbService);
     const context = makeContext({
       user: { id: 'u-1', isPlatformAdmin: false },
-      params: { id: 'org-1' },
+      params: { organizationId: 'org-1' },
     });
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
@@ -78,7 +79,7 @@ describe('PermissionsGuard', () => {
     const guard = new PermissionsGuard(reflector, dbService);
     const context = makeContext({
       user: { id: 'u-1', isPlatformAdmin: false },
-      params: { id: 'org-1' },
+      params: { organizationId: 'org-1' },
     });
 
     await expect(guard.canActivate(context)).resolves.toBe(false);

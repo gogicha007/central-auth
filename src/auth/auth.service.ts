@@ -3,7 +3,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { AuditAction, ResourceType } from '@prisma/client';
+import { AuditAction, ResourceType, UserStatus } from '@prisma/client';
 import { SignUpDto } from './dto/signUp.dto';
 import { AuditService } from '../audit/audit.service';
 import { JwtService, TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
@@ -23,6 +23,7 @@ import {
   getJwtOptions,
 } from './auth-session-cache.util';
 import { ok } from '../common/utils/api-response.util';
+<<<<<<< HEAD
 import ms, { type StringValue } from 'ms';
 
 type RefreshFailure =
@@ -39,7 +40,26 @@ interface RefreshCtx {
   ip?: string;
   userAgent?: string;
 }import { DatabaseService } from '../database/database.service';
+=======
+import { DatabaseService } from '../database/database.service';
+import ms, { type StringValue } from 'ms'
+>>>>>>> develop
 
+
+type RefreshFailure =
+  | 'missing_token'
+  | 'token_expired'
+  | 'token_invalid'
+  | 'session_inactive'
+  | 'version_mismatch'
+  | 'user_not_found';
+
+interface RefreshCtx {
+  userId?: string;
+  sessionId?: string;
+  ip?: string;
+  userAgent?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -91,11 +111,17 @@ export class AuthService {
   }
 
   async login(user: LoginResponseDto, ip?: string, userAgent?: string | null) {
-    const session = await this.sessionsService.createSession(
-      user.id,
-      ip,
-      userAgent,
-    );
+    const organizations = await
+      this.dbService.organizationMember.findMany({
+        where: { userId: user.id },
+        select: {
+          organizationId: true,
+          organization: { select: { name: true } },
+          role: { select: { name: true } }
+        }
+      })
+
+    const session = await this.sessionsService.createSession(user.id, ip, userAgent)
 
     await cacheSession(this.redisService, session);
 
@@ -103,35 +129,31 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(
       accessPayload,
+<<<<<<< HEAD
       getJwtOptions(
         this.configService,
         'JWT_ACCESS_TOKEN_SECRET',
         this.accessTtl,
       ),
+=======
+      getJwtOptions(this.configService, 'JWT_ACCESS_TOKEN_SECRET', this.accessTtl),
+>>>>>>> develop
     );
 
-    const refreshPayload = {
-      ...accessPayload,
-      version: session.refreshVersion,
-    };
+    const refreshPayload = { ...accessPayload, version: session.refreshVersion, };
 
     const refreshToken = this.jwtService.sign(
       refreshPayload,
+<<<<<<< HEAD
       getJwtOptions(
         this.configService,
         'JWT_REFRESH_TOKEN_SECRET',
         this.refreshTtl,
       ),
+=======
+      getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl),
+>>>>>>> develop
     );
-
-    const organizations = await this.dbService.organizationMember.findMany({
-      where: { userId: user.id },
-      select: {
-        organizationId: true,
-        organization: { select: { name: true } },
-        role: { select: { name: true } }
-      }
-    })
 
     await this.createAuditLog(AuditAction.LOGIN, {
       userId: user.id,
@@ -146,15 +168,21 @@ export class AuthService {
       refreshToken,
       tokenType: 'bearer',
       expiresIn: this.accessExpiresInSeconds,
+<<<<<<< HEAD
+=======
+      organizations
+>>>>>>> develop
     };
   }
 
   async refresh(refreshToken: string, ip?: string, userAgent?: string) {
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token is required');
-    }
+    if (!refreshToken) return this.rejectRefresh('missing_token', { ip, userAgent })
 
+<<<<<<< HEAD
     let payload: JwtPayload & { version?: number };
+=======
+    let payload: JwtPayload & { version?: number }
+>>>>>>> develop
     try {
       payload = this.jwtService.verify(refreshToken, {
         secret: this.configService.getOrThrow('JWT_REFRESH_TOKEN_SECRET'),
@@ -162,15 +190,25 @@ export class AuthService {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         return this.rejectRefresh('token_expired', { ip, userAgent });
+<<<<<<< HEAD
       }
       if (error instanceof JsonWebTokenError) {
         return this.rejectRefresh('token_invalid', { ip, userAgent });
+=======
+>>>>>>> develop
       }
 
+      if (error instanceof JsonWebTokenError) {
+        return this.rejectRefresh('token_invalid', { ip, userAgent })
+      }
       throw error;
     }
 
+<<<<<<< HEAD
     const ctx = { userId: payload.sub, sessionId: payload.sid, ip, userAgent };
+=======
+    const ctx = { userId: payload.sub, sessionId: payload.sid, ip, userAgent }
+>>>>>>> develop
 
     const session = await getSessionForAuth(
       this.redisService,
@@ -181,11 +219,19 @@ export class AuthService {
       return this.rejectRefresh('session_inactive', ctx);
     }
 
+<<<<<<< HEAD
+=======
+    if (session.userId !== payload.sub) {
+      return this.rejectRefresh('token_invalid', ctx)
+    }
+
+>>>>>>> develop
     if (session.refreshVersion !== payload.version) {
       return this.rejectRefresh('version_mismatch', ctx);
     }
 
     const user = await this.userService.findById(payload.sub);
+<<<<<<< HEAD
     if (!user) return this.rejectRefresh('user_not_found', ctx);
 
     const rotated = await this.sessionsService.rotateRefreshVersion(
@@ -212,6 +258,35 @@ export class AuthService {
       {...tokenPayload, version: rotated.refreshVersion},
       getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl)
     )
+=======
+    if (!user || user.status !== UserStatus.ACTIVE) { return this.rejectRefresh('user_not_found', ctx) }
+
+    if (typeof payload.version !== 'number') { return this.rejectRefresh('token_invalid', ctx) }
+
+    const rotated = await this.sessionsService.rotateRefreshVersion(
+      session.id,
+      payload.version
+    );
+    if (!rotated) { return this.rejectRefresh('version_mismatch', ctx) }
+
+    try {
+      await cacheSession(this.redisService, rotated);
+    } catch (error) {
+      this.logger.warn({ msg: 'Session cache write failed', sessionId: session.id, error })
+      await this.redisService.delete(getSessionCacheKey(session.id)).catch(() => undefined);
+    }
+
+    const tokenPayload = createTokenPayload(user, session.id);
+    const accessToken = this.jwtService.sign(
+      tokenPayload,
+      getJwtOptions(this.configService, 'JWT_ACCESS_TOKEN_SECRET', this.accessTtl),
+    );
+
+    const newRefreshToken = this.jwtService.sign(
+      { ...tokenPayload, version: rotated.refreshVersion },
+      getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl),
+    );
+>>>>>>> develop
 
     await this.createAuditLog(AuditAction.REFRESH_TOKEN, {
       userId: user.id,
@@ -225,7 +300,11 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
       tokenType: 'bearer',
+<<<<<<< HEAD
       expiresIn: this.accessExpiresInSeconds,
+=======
+      expiresIn: this.accessExpiresInSeconds
+>>>>>>> develop
     };
   }
 
@@ -324,11 +403,37 @@ export class AuthService {
     }
   }
 
+<<<<<<< HEAD
   private async rejectRefresh(
     reason: RefreshFailure,
     ctx: RefreshCtx = {},
   ): Promise<never> {
     this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
+=======
+
+  private get accessTtl(): StringValue {
+    return this.configService.getOrThrow<string>('JWT_ACCESS_TTL_M') as StringValue
+  }
+
+  private get refreshTtl(): StringValue {
+    return this.configService.getOrThrow<string>('JWT_REFRESH_TTL_D') as StringValue;
+  }
+
+  private get accessExpiresInSeconds(): number {
+    const millis = ms(this.accessTtl);
+    if (typeof millis !== 'number' || Number.isNaN(millis)) {
+      throw new Error(`Invalid access token TTL: ${this.accessTtl}`);
+    }
+    return Math.floor(millis / 1000);
+  }
+
+  private async rejectRefresh(reason: RefreshFailure, ctx: RefreshCtx = {}): Promise<never> {
+    if (reason === 'token_expired' || reason === 'session_inactive') {
+      this.logger.log({ msg: 'Refresh rejected', reason, ...ctx });
+    } else {
+      this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
+    }
+>>>>>>> develop
 
     if (reason === 'version_mismatch' || reason === 'token_invalid') {
       await this.createAuditLog(AuditAction.REFRESH_FAILED, {
@@ -343,6 +448,7 @@ export class AuthService {
 
     throw new UnauthorizedException('Invalid refresh token');
   }
+<<<<<<< HEAD
 
   private get accessTtl(): StringValue {
     return this.configService.getOrThrow<string>('JWT_TTL_M') as StringValue;
@@ -361,4 +467,6 @@ export class AuthService {
     }
     return Math.floor(millis / 1000);
   }
+=======
+>>>>>>> develop
 }

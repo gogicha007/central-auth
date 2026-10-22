@@ -262,7 +262,7 @@ export class UsersService {
         email: true,
         status: true,
         isPlatformAdmin: true,
-        passwordHash: true,
+        // passwordHash: true,
       },
     });
   }
@@ -528,7 +528,13 @@ export class UsersService {
   }
 
   async changePassword(data: ChangePasswordDto) {
-    const user = await this.findById(data.userId as string);
+    const user = await this.dbService.user.findUnique({
+      where: { id: data.userId },
+      select: {
+        id: true,
+        passwordHash: true,
+      },
+    });
 
     if (!user) throw new UnauthorizedException('User not found');
 

@@ -12,9 +12,13 @@ import { AuditService } from '../audit/audit.service';
 describe('AuthService.login', () => {
   let authService: AuthService;
   let sessionsService: {
+<<<<<<< HEAD
     createSession: jest.Mock<
       (userId: string, ip?: string, userAgent?: string) => Promise<{ id: string }>
     >;
+=======
+    createSession: jest.Mock<(...args: any[]) => Promise<{ id: string }>>;
+>>>>>>> develop
   };
   let jwtService: { sign: jest.Mock };
   let configService: { getOrThrow: jest.Mock<(key: string) => string> };
@@ -31,7 +35,11 @@ describe('AuthService.login', () => {
             return 'refresh-secret';
           case 'JWT_TTL_M':
             return '15m';
+<<<<<<< HEAD
           case 'JWT_REFRESH_TTL_D':
+=======
+          case 'REFRESH_TTL':
+>>>>>>> develop
             return '30d';
           default:
             return '';
