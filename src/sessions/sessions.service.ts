@@ -3,12 +3,15 @@ import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '@nestjs/config';
 import { handlePrismaError } from '../common/filters/error.util';
 import { Prisma } from '@prisma/client';
+import { RedisService } from '../redis/redis.service';
+import { getSessionCacheKey } from '../auth/auth-session-cache.util';
 
 @Injectable()
 export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService
   ) { }
 
   private getPositiveIntConfig(key: string): number {
@@ -39,37 +42,47 @@ export class SessionsService {
     idleExpiresAt.setHours(idleExpiresAt.getHours() + idleTtlHours);
 
     try {
-      return await this.dbService.$transaction(async (tx) => {
-        const activeSession = await tx.session.findFirst({
-          where: {
-            userId,
-            revokedAt: null,
-            expiresAt: { gt: now },
-            idleExpiresAt: { gt: now },
-          },
-          select: { id: true },
-        });
-        if (activeSession) {
-          await tx.session.update({
-            where: { id: activeSession.id },
+      const { session, replacedSessionId } =
+        await this.dbService.$transaction(async (tx) => {
+          const activeSession = await tx.session.findFirst({
+            where: {
+              userId,
+              revokedAt: null,
+              expiresAt: { gt: now },
+              idleExpiresAt: { gt: now },
+            },
+            select: { id: true },
+          });
+          if (activeSession) {
+            await tx.session.update({
+              where: { id: activeSession.id },
+              data: {
+                revokedAt: now,
+                revokedReason: 'replaced',
+              },
+            });
+          }
+
+          const newSession = await tx.session.create({
             data: {
-              revokedAt: now,
-              revokedReason: 'replaced',
+              userId,
+              ip,
+              userAgent,
+              lastActivity: now,
+              expiresAt,
+              idleExpiresAt,
             },
           });
-        }
 
-        return tx.session.create({
-          data: {
-            userId,
-            ip,
-            userAgent,
-            lastActivity: now,
-            expiresAt,
-            idleExpiresAt,
-          },
+          return {
+            session: newSession,
+            replacedSessionId: activeSession?.id
+          }
         });
-      });
+      if (replacedSessionId) {
+        await this.redisService.delete(getSessionCacheKey(replacedSessionId));
+      }
+      return session
     } catch (error) {
       handlePrismaError(error);
     }
