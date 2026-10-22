@@ -33,10 +33,17 @@ export class HttpAllExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
+    const serverErrorMessage =
+      status === HttpStatus.SERVICE_UNAVAILABLE
+        ? 'Service Unavailable'
         : 'Internal Server Error';
+
+    const message =
+      status >= HttpStatus.INTERNAL_SERVER_ERROR
+        ? serverErrorMessage
+        : exception instanceof HttpException
+          ? exception.getResponse()
+          : serverErrorMessage;
 
     let errorMessage: string;
 
@@ -54,11 +61,9 @@ export class HttpAllExceptionFilter implements ExceptionFilter {
       errorMessage = 'Internal Server Error';
     }
 
-    // Preserve field names until sensitive fields have been redacted.
-    const logMessage = JSON.stringify(redact(message));
     const path = request.url.split('?')[0];
     this.loggingService.error(
-      `Error: ${logMessage} - Request: ${request.method} ${path}`,
+      `Request failed: ${request.method} ${path} - Status: ${status}`,
     );
 
     response.status(status).json({
