@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { LoggingService } from '../logging/logging.service';
+import { redact } from '../utils/redact.util';
 
 function hasMessageProperty(
   obj: object,
@@ -20,7 +21,7 @@ function hasMessageProperty(
 
 @Catch()
 export class HttpAllExceptionFilter implements ExceptionFilter {
-  constructor(private readonly loggingService: LoggingService) {}
+  constructor(private readonly loggingService: LoggingService) { }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -53,8 +54,11 @@ export class HttpAllExceptionFilter implements ExceptionFilter {
       errorMessage = 'Internal Server Error';
     }
 
+    // Preserve field names until sensitive fields have been redacted.
+    const logMessage = JSON.stringify(redact(message));
+    const path = request.url.split('?')[0];
     this.loggingService.error(
-      `Error: ${errorMessage} - Request: ${request.method} ${request.url}`,
+      `Error: ${logMessage} - Request: ${request.method} ${path}`,
     );
 
     response.status(status).json({
