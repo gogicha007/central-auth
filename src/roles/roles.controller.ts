@@ -19,6 +19,7 @@ export class RolesController {
   }
 
   @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
   @Post(':id/permissions')
   assignPermission(
     @Param('id') roleId: string,
@@ -28,6 +29,7 @@ export class RolesController {
   }
 
   @Roles('OWNER', 'ADMIN')
+  @UseGuards(RolesGuard)
   @Delete(':id/permissions/:permissionId')
   removePermission(
     @Param('id') roleId: string,
