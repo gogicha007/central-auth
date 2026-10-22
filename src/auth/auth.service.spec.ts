@@ -6,12 +6,18 @@ import { PasswordService } from '../common/password/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../sessions/sessions.service';
+import { RedisService } from '../redis/redis.service';
+import { AuditService } from '../audit/audit.service';
 
 describe('AuthService.login', () => {
   let authService: AuthService;
-  let sessionsService: { createSession: jest.Mock };
+  let sessionsService: {
+    createSession: jest.Mock<
+      (userId: string, ip?: string, userAgent?: string) => Promise<{ id: string }>
+    >;
+  };
   let jwtService: { sign: jest.Mock };
-  let configService: { getOrThrow: jest.Mock };
+  let configService: { getOrThrow: jest.Mock<(key: string) => string> };
 
   beforeEach(async () => {
     sessionsService = { createSession: jest.fn() };
@@ -24,8 +30,8 @@ describe('AuthService.login', () => {
           case 'JWT_REFRESH_TOKEN_SECRET':
             return 'refresh-secret';
           case 'JWT_TTL_M':
-            return '15';
-          case 'REFRESH_TTL':
+            return '15m';
+          case 'JWT_REFRESH_TTL_D':
             return '30d';
           default:
             return '';
@@ -41,6 +47,8 @@ describe('AuthService.login', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
         { provide: SessionsService, useValue: sessionsService },
+        { provide: RedisService, useValue: { set: jest.fn() } },
+        { provide: AuditService, useValue: {} },
       ],
     }).compile();
 
