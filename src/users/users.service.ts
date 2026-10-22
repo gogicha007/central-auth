@@ -473,7 +473,7 @@ export class UsersService {
       idleExpiresAt: Date;
       revokedAt: Date | null;
       refreshVersion: number;
-    }[];
+    }[] = [];
 
     try {
       await this.dbService.$transaction(async (tx) => {
@@ -499,20 +499,41 @@ export class UsersService {
           },
         });
 
-        activeUserSessions = await this.sessionService.getUserActiveSessions(
-          updatedToken.userId,
-        );
-        await this.sessionService.revokeSessionsByUserId(
-          updatedToken.userId,
-          'password reset',
-        );
+        activeUserSessions = await tx.session.findMany({
+          where: {
+            userId: updatedToken.userId,
+            revokedAt: null,
+            expiresAt: { gt: now },
+            idleExpiresAt: { gt: now }
+          },
+          select: {
+            id: true,
+            userId: true,
+            expiresAt: true,
+            idleExpiresAt: true,
+            revokedAt: true,
+            refreshVersion: true,
+          }
+        });
 
-        await Promise.all(
-          activeUserSessions.map((session) =>
-            this.redisService.delete(getSessionCacheKey(session.id)),
-          ),
-        );
+        await tx.session.updateMany({
+          where: {
+            userId: updatedToken.userId,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: now,
+            revokedReason: 'password reset',
+          },
+        });
+
       });
+
+      await Promise.all(
+        activeUserSessions.map((session) =>
+          this.redisService.delete(getSessionCacheKey(session.id)),
+        ),
+      );
 
       await this.auditService.create({
         action: AuditAction.PASSWORD_RESET_COMPLETED,

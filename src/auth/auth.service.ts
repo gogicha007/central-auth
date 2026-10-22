@@ -219,19 +219,15 @@ export class AuthService {
       return this.rejectRefresh('session_inactive', ctx);
     }
 
-<<<<<<< HEAD
-=======
     if (session.userId !== payload.sub) {
       return this.rejectRefresh('token_invalid', ctx)
     }
 
->>>>>>> develop
     if (session.refreshVersion !== payload.version) {
       return this.rejectRefresh('version_mismatch', ctx);
     }
 
     const user = await this.userService.findById(payload.sub);
-<<<<<<< HEAD
     if (!user) return this.rejectRefresh('user_not_found', ctx);
 
     const rotated = await this.sessionsService.rotateRefreshVersion(
@@ -258,7 +254,6 @@ export class AuthService {
       {...tokenPayload, version: rotated.refreshVersion},
       getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl)
     )
-=======
     if (!user || user.status !== UserStatus.ACTIVE) { return this.rejectRefresh('user_not_found', ctx) }
 
     if (typeof payload.version !== 'number') { return this.rejectRefresh('token_invalid', ctx) }
@@ -286,7 +281,6 @@ export class AuthService {
       { ...tokenPayload, version: rotated.refreshVersion },
       getJwtOptions(this.configService, 'JWT_REFRESH_TOKEN_SECRET', this.refreshTtl),
     );
->>>>>>> develop
 
     await this.createAuditLog(AuditAction.REFRESH_TOKEN, {
       userId: user.id,
@@ -300,11 +294,8 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
       tokenType: 'bearer',
-<<<<<<< HEAD
       expiresIn: this.accessExpiresInSeconds,
-=======
       expiresIn: this.accessExpiresInSeconds
->>>>>>> develop
     };
   }
 
@@ -403,13 +394,11 @@ export class AuthService {
     }
   }
 
-<<<<<<< HEAD
   private async rejectRefresh(
     reason: RefreshFailure,
     ctx: RefreshCtx = {},
   ): Promise<never> {
     this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
-=======
 
   private get accessTtl(): StringValue {
     return this.configService.getOrThrow<string>('JWT_ACCESS_TTL_M') as StringValue
@@ -433,7 +422,6 @@ export class AuthService {
     } else {
       this.logger.warn({ msg: 'Refresh rejected', reason, ...ctx });
     }
->>>>>>> develop
 
     if (reason === 'version_mismatch' || reason === 'token_invalid') {
       await this.createAuditLog(AuditAction.REFRESH_FAILED, {
@@ -448,7 +436,6 @@ export class AuthService {
 
     throw new UnauthorizedException('Invalid refresh token');
   }
-<<<<<<< HEAD
 
   private get accessTtl(): StringValue {
     return this.configService.getOrThrow<string>('JWT_TTL_M') as StringValue;
@@ -467,6 +454,4 @@ export class AuthService {
     }
     return Math.floor(millis / 1000);
   }
-=======
->>>>>>> develop
 }

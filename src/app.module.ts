@@ -22,6 +22,7 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { HealthModule } from './health/health.module';
 import { validateEnvironment } from './config/env.validation';
+import { redisConnectionOptions } from './config/redis.config';
 
 @Module({
   imports: [
@@ -30,11 +31,11 @@ import { validateEnvironment } from './config/env.validation';
       load: [authConfig],
       validate: validateEnvironment
     }),
-    BullModule.forRoot({
-      connection: {
-        host: 'localhost',
-        port: 6379,
-      },
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: redisConnectionOptions(config),
+      }),
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
