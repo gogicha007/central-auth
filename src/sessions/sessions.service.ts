@@ -8,7 +8,7 @@ export class SessionsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   private getPositiveIntConfig(key: string): number {
     const raw = this.configService.getOrThrow<string>(key);
@@ -181,5 +181,14 @@ export class SessionsService {
     });
 
     return result.count;
+  }
+
+  async rotateRefreshVersion(sessionId: string, expected: number) {
+    const { count } = await this.dbService.session.updateMany({
+      where: { id: sessionId, refreshVersion: expected },
+      data: { refreshVersion: { increment: 1 } },
+    });
+    if (count === 0) return null;
+    return this.dbService.session.findUnique({ where: { id: sessionId } });
   }
 }
