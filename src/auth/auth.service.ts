@@ -3,7 +3,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { AuditAction, ResourceType } from '@prisma/client';
+import { AuditAction, ResourceType, UserStatus } from '@prisma/client';
 import { SignUpDto } from './dto/signUp.dto';
 import { AuditService } from '../audit/audit.service';
 import { JwtService, TokenExpiredError, JsonWebTokenError } from '@nestjs/jwt';
@@ -167,12 +167,16 @@ export class AuthService {
       return this.rejectRefresh('session_inactive', ctx);
     }
 
+    if (session.userId !== payload.sub) {
+      return this.rejectRefresh('token_invalid', ctx)
+    }
+
     if (session.refreshVersion !== payload.version) {
       return this.rejectRefresh('version_mismatch', ctx);
     }
 
     const user = await this.userService.findById(payload.sub);
-    if (!user) { return this.rejectRefresh('user_not_found', ctx) }
+    if (!user || user.status !== UserStatus.ACTIVE) { return this.rejectRefresh('user_not_found', ctx) }
 
     if (typeof payload.version !== 'number') { return this.rejectRefresh('token_invalid', ctx) }
 

@@ -8,6 +8,8 @@ paths:
   /auth/signup:
     post:
       summary: Create user
+      description: Limited to 5 requests per minute per IP per API instance.
+      security: []
       operationId: signup
       requestBody:
         required: true
@@ -33,6 +35,8 @@ paths:
                   type: string
 
       responses:
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
         '201':
           description: create user and send verification email
           content:
@@ -176,8 +180,8 @@ paths:
   /auth/login:
     post:
       summary: Login user
-      security:
-        - bearerToken: []
+      description: Limited to 5 attempts per minute per IP per API instance. Failed logins count toward this limit.
+      security: []
       operationId: login
       requestBody:
         required: true
@@ -196,7 +200,9 @@ paths:
                   type: string
                   format: password
       responses:
-        '200':
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
+        '201':
           description: login user
           content:
             application/json:
@@ -263,8 +269,8 @@ paths:
   /auth/refresh:
     post:
       summary: refresh token
-      security:
-        - bearerToken: []
+      description: Limited to 20 requests per minute per IP per API instance. Authenticates using the refresh token in the body; no access token is required.
+      security: []
       operationId: refresh token
       requestBody:
         required: true
@@ -279,7 +285,9 @@ paths:
                   type: string
                   format: token
       responses:
-        '200':
+        '429':
+          $ref: '#/components/responses/AuthRateLimited'
+        '201':
           description: refresh token
           content:
             application/json:
@@ -1542,6 +1550,24 @@ paths:
           description: User not found
 
 components:
+  responses:
+    AuthRateLimited:
+      description: Too many authentication requests from this IP. Retry after the indicated delay.
+      headers:
+        Retry-After:
+          description: Seconds until another request is allowed.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 429
+              message:
+                type: string
   schemas:
     User:
       type: object
