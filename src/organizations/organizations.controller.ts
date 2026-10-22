@@ -26,7 +26,7 @@ import { OrganizationGuard } from '../auth/guards/organization.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizationsService: OrganizationsService) { }
+  constructor(private readonly organizationsService: OrganizationsService) {}
 
   @Post()
   create(
@@ -38,7 +38,7 @@ export class OrganizationsController {
 
   @Get()
   findAll(@CurrentUser() user: AuthenticatedUserContext) {
-    if (!user.isPlatformAdmin) throw new ForbiddenException()
+    if (!user.isPlatformAdmin) throw new ForbiddenException();
     return this.organizationsService.findAll();
   }
 
@@ -50,16 +50,16 @@ export class OrganizationsController {
 
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'DIRECTOR', 'EMPLOYEE', 'VIEWER')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(':organizationId')
+  findOne(@Param('organizationId') id: string) {
     return this.organizationsService.findOne(id);
   }
 
   @Roles('OWNER', 'ADMIN')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Patch(':id')
+  @Patch(':organizationId')
   update(
-    @Param('id') id: string,
+    @Param('organizationId') id: string,
     @Body() updateOrganizationDto: UpdateOrganizationDto,
   ) {
     return this.organizationsService.update(id, updateOrganizationDto);
@@ -67,36 +67,35 @@ export class OrganizationsController {
 
   @Roles('OWNER')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(':organizationId')
+  remove(@Param('organizationId') id: string) {
     return this.organizationsService.remove(id);
   }
 
   @Roles('OWNER')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Post(':id/transfer')
+  @Post(':organizationId/transfer')
   transferOwnership(
-    @Param('id') id: string,
+    @Param('organizationId') id: string,
     @CurrentUser() user: AuthenticatedUserContext,
-    @Body() data: { toOwnerId: string }
+    @Body() data: { toOwnerId: string },
   ) {
     const payload = {
       organizationId: id,
       fromOwnerId: user.id,
-      toOwnerId: data.toOwnerId
-    }
-    return this.organizationsService.transferOrganizationOwnership(payload)
+      toOwnerId: data.toOwnerId,
+    };
+    return this.organizationsService.transferOrganizationOwnership(payload);
   }
 
   @Roles('OWNER', 'ADMIN', 'DIRECTOR')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Post(':id/invitations')
+  @Post(':organizationId/invitations')
   orgInvitacions(
     @CurrentUser() user: AuthenticatedUserContext,
-    @Param('id') organizationId: string,
+    @Param('organizationId') organizationId: string,
     @Body() { roleName, email }: { roleName: RoleNames; email: string },
   ) {
-
     return this.organizationsService.sendInvitation(user, {
       organizationId,
       email,
@@ -120,9 +119,9 @@ export class OrganizationsController {
 
   @Roles('OWNER', 'ADMIN')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Patch(':id/members/:memberId/role')
+  @Patch(':organizationId/members/:memberId/role')
   membershipRoles(
-    @Param('id') id: string,
+    @Param('organizationId') id: string,
     @Param('memberId') organizationMemberId: string,
     @CurrentUser() user: AuthenticatedUserContext,
     @Body() data: UpdateMembershipRoleRequestDto,
@@ -136,15 +135,15 @@ export class OrganizationsController {
 
   @Roles('OWNER', 'ADMIN')
   @UseGuards(OrganizationGuard, RolesGuard)
-  @Delete(':id/members/:memberId')
+  @Delete(':organizationId/members/:memberId')
   removeMember(
-    @Param('id') id: string,
+    @Param('organizationId') id: string,
     @Param('memberId') memberId: string,
-    @CurrentUser() user: AuthenticatedUserContext
+    @CurrentUser() user: AuthenticatedUserContext,
   ) {
-    return this.organizationsService.deleteMember(
-      user,
-      { organizationId: id, organizationMemberId: memberId })
+    return this.organizationsService.deleteMember(user, {
+      organizationId: id,
+      organizationMemberId: memberId,
+    });
   }
-
 }

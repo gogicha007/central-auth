@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { MemberStatus, RoleNames } from '@prisma/client';
 import { DatabaseService } from '../../database/database.service';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { organizationIdFromRequest } from '../organization-context';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -41,12 +42,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const organizationId =
-      request.params?.organizationId ??
-      request.params?.orgId ??
-      request.params?.id ??
-      getSingleHeaderValue(request.headers?.['x-organization-id']) ??
-      getSingleHeaderValue(request.headers?.['x-org-id']);
+    const organizationId = organizationIdFromRequest(request);
 
     if (!organizationId) {
       return false;
@@ -73,12 +69,4 @@ export class RolesGuard implements CanActivate {
 
     return requiredRoles.includes(member.role.name);
   }
-}
-
-function getSingleHeaderValue(value: string | string[] | undefined) {
-  if (!value) {
-    return undefined;
-  }
-
-  return Array.isArray(value) ? value[0] : value;
 }

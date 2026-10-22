@@ -7,9 +7,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { MemberStatus } from '@prisma/client';
 import { DatabaseService } from '../../database/database.service';
-import {
-  PERMISSIONS_KEY,
-} from '../decorators/permissions.decorator';
+import { organizationIdFromRequest } from '../organization-context';
+import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -43,12 +42,7 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const organizationId =
-      request.params?.organizationId ??
-      request.params?.orgId ??
-      request.params?.id ??
-      getSingleHeaderValue(request.headers?.['x-organization-id']) ??
-      getSingleHeaderValue(request.headers?.['x-org-id']);
+    const organizationId = organizationIdFromRequest(request);
 
     if (!organizationId) {
       return false;
@@ -98,12 +92,4 @@ export class PermissionsGuard implements CanActivate {
 
 function normalizePermission(permission: string): string {
   return permission.trim().toUpperCase().replace(/\s+/g, '');
-}
-
-function getSingleHeaderValue(value: string | string[] | undefined) {
-  if (!value) {
-    return undefined;
-  }
-
-  return Array.isArray(value) ? value[0] : value;
 }
